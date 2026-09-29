@@ -45,6 +45,13 @@
       </Grid>
     </Border>
 
+    <!-- Primary action: official uninstall or manual removal; nothing for protected types (§9.7–9.9) -->
+    <Border DockPanel.Dock="Top" Padding="16,10" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Brush.Border}"
+            Visibility="{Binding HasAction, Converter={StaticResource BoolToVisibility}}">
+      <Button Style="{StaticResource Accent.Button}" Content="{Binding ActionText}" HorizontalAlignment="Left" MinWidth="120"
+              Command="{Binding DataContext.UninstallCurrentCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+    </Border>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,0,16,16">
       <StackPanel>
         <!-- §14.6 verdict first: the "why" is the core of the product -->

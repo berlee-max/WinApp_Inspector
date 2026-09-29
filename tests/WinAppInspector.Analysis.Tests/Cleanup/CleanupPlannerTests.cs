@@ -29,6 +29,19 @@ public class CleanupPlannerTests
         new(directories ?? [], registry ?? [], configKeys ?? [], startup ?? [], services ?? [], tasks ?? []);
 
     [Fact]
+    public void Registry_keys_of_a_running_program_are_blocked_until_it_is_uninstalled()
+    {
+        var running = App(AppType.Portable) with { Processes = [new ProcessRecord { ProcessId = 1, Name = "foo.exe", ExecutablePath = @"D:\Tools\foo.exe" }] };
+        var report = Report(configKeys: [@"HKEY_CURRENT_USER\Software\Foo"]);
+
+        var live = _planner.Build(running, report, afterUninstall: false);
+        var afterUninstall = _planner.Build(running, report, afterUninstall: true);
+
+        live.Should().ContainSingle().Which.Blocked.Should().Be(DeletionBlockerKind.ApplicationRunning.ToString());
+        afterUninstall.Should().ContainSingle().Which.Blocked.Should().BeNull("the uninstall has finished; the process list from the scan is stale");
+    }
+
+    [Fact]
     public void Residue_directories_under_the_profile_are_recyclable_unblocked_candidates()
     {
         var dir = Dir($@"{Folders.LocalAppData}\Foo", size: 420_000_000);

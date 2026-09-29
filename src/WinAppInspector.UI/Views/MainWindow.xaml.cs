@@ -19,15 +19,8 @@ public partial class MainWindow : Window
         viewModel.SettingsRequested += (_, _) => ShowSettings();
         viewModel.AboutRequested += (_, _) => new AboutWindow { Owner = this }.ShowDialog();
 
-        // Populate the overview on first launch; the scan runs off the UI thread and reports progress (§31).
-        Loaded += async (_, _) =>
-        {
-            await viewModel.LoadCacheAsync();
-            if (viewModel.RescanCommand.CanExecute(null))
-            {
-                viewModel.RescanCommand.Execute(null);
-            }
-        };
+        // §33: show the previous results right away; scanning starts when the user presses the button.
+        Loaded += async (_, _) => await viewModel.LoadCacheAsync();
     }
 
     private void ShowSettings()

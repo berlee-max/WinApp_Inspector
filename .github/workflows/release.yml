@@ -1,0 +1,110 @@
+name: Release
+
+# Builds the win-x64 packages and attaches them to a GitHub Release.
+# Triggered by pushing a tag such as v0.1.0, or by hand with a version (a pre-release is created then).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 0.1.0-preview.1). A pre-release is created."
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  publish:
+    name: Publish win-x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.event_name }}' -eq 'push') { '${{ github.ref_name }}'.TrimStart('v') } else { '${{ inputs.version }}' }
+          if ($version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Not a semantic version: $version" }
+          $numeric = ($version -split '-')[0]
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "numeric=$numeric" >> $env:GITHUB_OUTPUT
+          "tag=v$version" >> $env:GITHUB_OUTPUT
+          "prerelease=$(if ('${{ github.event_name }}' -eq 'push' -and $version -notmatch '-') { 'false' } else { 'true' })" >> $env:GITHUB_OUTPUT
+
+      - name: Restore
+        run: dotnet restore WinAppInspector.sln
+
+      - name: Test
+        run: dotnet test WinAppInspector.sln --configuration Release
+
+      # Self-contained: one exe, no .NET runtime needed on the target machine (the "green" form the requirements ask for).
+      - name: Publish self-contained single file
+        run: >
+          dotnet publish src/WinAppInspector.UI/WinAppInspector.UI.csproj
+          --configuration Release --runtime win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
+          --output publish/self-contained
+
+      # Framework-dependent: much smaller, needs the .NET 8 Desktop Runtime installed.
+      - name: Publish framework-dependent
+        run: >
+          dotnet publish src/WinAppInspector.UI/WinAppInspector.UI.csproj
+          --configuration Release --runtime win-x64 --self-contained false
+          -p:PublishSingleFile=true -p:DebugType=none
+          -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
+          --output publish/framework-dependent
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $v = '${{ steps.version.outputs.version }}'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item README.md publish/self-contained/
+          Copy-Item README.md publish/framework-dependent/
+          Compress-Archive -Path publish/self-contained/* -DestinationPath "dist/WinAppInspector-$v-win-x64.zip"
+          Compress-Archive -Path publish/framework-dependent/* -DestinationPath "dist/WinAppInspector-$v-win-x64-framework-dependent.zip"
+          Get-ChildItem dist | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
+          Get-FileHash dist/*.zip -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS.txt
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: WinAppInspector-${{ steps.version.outputs.version }}-win-x64
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: WinApp Inspector ${{ steps.version.outputs.version }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          generate_release_notes: true
+          body: |
+            ## 下载
+
+            | 文件 | 说明 |
+            |---|---|
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64.zip` | **推荐**。自包含单文件 exe，解压即用，不需要安装 .NET。 |
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-framework-dependent.zip` | 体积小，需要已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)。 |
+            | `SHA256SUMS.txt` | 校验和。 |
+
+            要求 Windows 10 1809 及以上，64 位。首次运行 Windows SmartScreen 可能提示"未知发布者"（未签名），选择"仍要运行"。
+            程序不需要管理员权限；只有删除 HKLM 项、服务、计划任务时才会按需提权。
+          files: |
+            dist/*.zip
+            dist/SHA256SUMS.txt

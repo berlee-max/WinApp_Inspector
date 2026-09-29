@@ -369,4 +369,457 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
 
+  <!-- ===================================================================================================== -->
+  <!-- Hero page (home / scanning / summary): deep blue gradient, white type, glass cards, one round action. -->
+  <LinearGradientBrush x:Key="Hero.Background" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#082E70" Offset="0" />
+    <GradientStop Color="#0A5FC8" Offset="0.49" />
+    <GradientStop Color="#402198" Offset="1" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="Hero.Text" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="Hero.TextSoft" Color="#CBD5F5" />
+  <SolidColorBrush x:Key="Hero.Glass" Color="#26FFFFFF" />
+  <SolidColorBrush x:Key="Hero.GlassBorder" Color="#40FFFFFF" />
+  <SolidColorBrush x:Key="Hero.GlassHover" Color="#3AFFFFFF" />
+  <RadialGradientBrush x:Key="Hero.RoundFill" Center="0.5,0.3" GradientOrigin="0.5,0.3" RadiusX="0.8" RadiusY="0.8">
+    <GradientStop Color="#38BDF8" Offset="0" />
+    <GradientStop Color="#0284C7" Offset="1" />
+  </RadialGradientBrush>
+  <LinearGradientBrush x:Key="Hero.EmblemFill" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#67E8F9" Offset="0" />
+    <GradientStop Color="#2563EB" Offset="0.6" />
+    <GradientStop Color="#1E1B4B" Offset="1" />
+  </LinearGradientBrush>
+
+  <Style x:Key="Hero.Title" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="40" />
+    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style x:Key="Hero.Body" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.TextSoft}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="LineHeight" Value="26" />
+  </Style>
+  <Style x:Key="Hero.Caption" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.TextSoft}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style x:Key="Hero.Feature" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Hero.Bullet" TargetType="Border">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="CornerRadius" Value="9" />
+    <Setter Property="Background" Value="{StaticResource Hero.RoundFill}" />
+    <Setter Property="Margin" Value="0,0,14,0" />
+  </Style>
+  <Style x:Key="Hero.BulletText" TargetType="TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Hero.Emblem" TargetType="Border">
+    <Setter Property="Width" Value="200" />
+    <Setter Property="Height" Value="200" />
+    <Setter Property="CornerRadius" Value="48" />
+    <Setter Property="Background" Value="{StaticResource Hero.EmblemFill}" />
+    <Setter Property="BorderBrush" Value="{StaticResource Hero.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#000000" BlurRadius="40" ShadowDepth="12" Opacity="0.35" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.EmblemText" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="96" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="0,-8,0,0" />
+  </Style>
+  <Style x:Key="Hero.Card" TargetType="Border">
+    <Setter Property="Background" Value="{StaticResource Hero.Glass}" />
+    <Setter Property="BorderBrush" Value="{StaticResource Hero.GlassBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Padding" Value="22,20" />
+    <Setter Property="Margin" Value="8" />
+    <Setter Property="MinHeight" Value="118" />
+  </Style>
+  <Style x:Key="Hero.CardTitle" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style x:Key="Hero.CardBody" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.TextSoft}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Margin" Value="0,8,0,12" />
+  </Style>
+  <Style x:Key="Hero.CardButton" TargetType="Button">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="Background" Value="{StaticResource Hero.Glass}" />
+    <Setter Property="Padding" Value="16,7" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{StaticResource Hero.GlassBorder}" BorderThickness="1" Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{StaticResource Hero.GlassHover}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.Secondary" TargetType="Button" BasedOn="{StaticResource Hero.CardButton}">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Padding" Value="22,9" />
+  </Style>
+  <Style x:Key="Hero.Link" TargetType="Button">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.TextSoft}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="Margin" Value="4,0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Root" CornerRadius="6" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{StaticResource Hero.Glass}" />
+              <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.Round" TargetType="Button">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="Width" Value="112" />
+    <Setter Property="Height" Value="112" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Grid>
+            <Ellipse x:Name="Halo" Fill="#FFFFFF" Opacity="0.12" Margin="-8" />
+            <Ellipse x:Name="Face" Fill="{StaticResource Hero.RoundFill}" Stroke="#80FFFFFF" StrokeThickness="2">
+              <Ellipse.Effect>
+                <DropShadowEffect Color="#0EA5E9" BlurRadius="30" ShadowDepth="0" Opacity="0.6" />
+              </Ellipse.Effect>
+            </Ellipse>
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Halo" Property="Opacity" Value="0.22" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.Progress" TargetType="ProgressBar">
+    <Setter Property="Height" Value="6" />
+    <Setter Property="Foreground" Value="#38BDF8" />
+    <Setter Property="Background" Value="{StaticResource Hero.Glass}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <!-- ===================================================================================================== -->
+  <!-- App manager: sidebar entries with counts, rows with tick boxes, fallback icon tiles. -->
+  <Style x:Key="Sidebar.Header" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="12,0,12,6" />
+  </Style>
+  <Style x:Key="Sidebar.Count" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="8,0,0,0" />
+  </Style>
+  <Style x:Key="Sidebar.Item" TargetType="RadioButton">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="#696E76" />
+    <Setter Property="Height" Value="38" />
+    <Setter Property="Margin" Value="0,1" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border x:Name="Root" CornerRadius="10" Background="Transparent" Padding="{TemplateBinding Padding}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Rectangle x:Name="Bar" Grid.Column="0" Width="3" Height="18" RadiusX="2" RadiusY="2" Fill="{StaticResource Brush.Accent}" Margin="0,0,9,0" Visibility="Collapsed" />
+              <ContentPresenter Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.RowSelected}" />
+              <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+              <Setter Property="Foreground" Value="#0D2D5B" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="App.Row" TargetType="ListViewItem">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ListViewItem">
+          <Border x:Name="Root" Background="{TemplateBinding Background}" BorderThickness="0,0,0,1"
+                  BorderBrush="{StaticResource Brush.Border}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.RowHover}" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.RowSelected}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="App.List" TargetType="ListView">
+    <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="ItemContainerStyle" Value="{StaticResource App.Row}" />
+    <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+    <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style x:Key="App.IconFallback" TargetType="Border">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Background" Value="{StaticResource Brush.NavSelected}" />
+  </Style>
+  <Style x:Key="App.IconFallbackText" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Check.Row" TargetType="CheckBox">
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="LayoutTransform">
+      <Setter.Value>
+        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Sort.Combo" TargetType="ComboBox">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="MinWidth" Value="110" />
+    <Setter Property="Padding" Value="8,4" />
+  </Style>
+
+  <!-- Hero additions: icon bullets drawn as paths, chips, card tiles, primary card button -->
+  <Style x:Key="Hero.BulletIcon" TargetType="Path">
+    <Setter Property="Stroke" Value="White" />
+    <Setter Property="StrokeThickness" Value="1.8" />
+    <Setter Property="StrokeLineJoin" Value="Round" />
+    <Setter Property="StrokeStartLineCap" Value="Round" />
+    <Setter Property="StrokeEndLineCap" Value="Round" />
+    <Setter Property="Width" Value="21" />
+    <Setter Property="Height" Value="21" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Hero.Chip" TargetType="Border">
+    <Setter Property="Background" Value="#12FFFFFF" />
+    <Setter Property="BorderBrush" Value="#14FFFFFF" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Margin" Value="9,0" />
+  </Style>
+  <Style x:Key="Hero.ChipText" TargetType="TextBlock" BasedOn="{StaticResource Hero.Caption}">
+    <Setter Property="Foreground" Value="#94FFFFFF" />
+  </Style>
+  <Style x:Key="Hero.BigTile" TargetType="Border">
+    <Setter Property="Width" Value="88" />
+    <Setter Property="Height" Value="88" />
+    <Setter Property="CornerRadius" Value="24" />
+    <Setter Property="Background" Value="{StaticResource Hero.RoundFill}" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#001343" BlurRadius="26" ShadowDepth="14" Opacity="0.3" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.CornerTile" TargetType="Border">
+    <Setter Property="Width" Value="52" />
+    <Setter Property="Height" Value="52" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Background" Value="{StaticResource Hero.RoundFill}" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#002062" BlurRadius="24" ShadowDepth="10" Opacity="0.28" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.CornerTileText" TargetType="TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="FontSize" Value="24" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Hero.CardButtonPrimary" TargetType="Button" BasedOn="{StaticResource Hero.CardButton}">
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="Foreground" Value="#15346B" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="#FFFFFF" BorderThickness="1" Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="#E6EEF9" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Manager shell inside the dark page -->
+  <!-- The shell itself carries no Effect: an Effect renders the whole subtree (list, text) through an intermediate
+       surface, which drops ClearType and re-blurs on every hover or scroll. The shadow lives on an empty sibling. -->
+  <Style x:Key="Manager.Shell" TargetType="Border">
+    <Setter Property="Margin" Value="10" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style x:Key="Manager.ShellShadow" TargetType="Border">
+    <Setter Property="Margin" Value="10" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#00103C" BlurRadius="28" ShadowDepth="8" Opacity="0.45" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Manager.Back" TargetType="Button" BasedOn="{StaticResource Link.Button}">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}" />
+  </Style>
+  <Style x:Key="Manager.Bottom" TargetType="Border">
+    <Setter Property="Background" Value="#F5F8F9FC" />
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="24,0" />
+    <Setter Property="CornerRadius" Value="0,0,18,18" />
+  </Style>
+  <Style x:Key="Sidebar.Desc" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="19" />
+    <Setter Property="Margin" Value="12,0,12,14" />
+  </Style>
+  <Style x:Key="Sidebar.SubHeader" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="12,18,12,6" />
+  </Style>
+  <Style x:Key="App.IconTile" TargetType="Border">
+    <Setter Property="Width" Value="42" />
+    <Setter Property="Height" Value="42" />
+    <Setter Property="CornerRadius" Value="11" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#223861" BlurRadius="13" ShadowDepth="5" Opacity="0.15" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="App.IconTileText" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
 </ResourceDictionary>

@@ -13,7 +13,9 @@ Windows 10/11 桌面工具：发现第三方软件、判断归属、调用官方
 - 依赖注入 / 宿主：Microsoft.Extensions.DependencyInjection + Microsoft.Extensions.Hosting
 - 日志：Microsoft.Extensions.Logging，写入本地文件（需求 §25 操作日志单独建模）
 - 测试：xUnit（+ FluentAssertions 可选）
-- UI 风格：Windows 11 风格、中性主色、以信息和证据为核心，不做红黄绿评分（需求 §29–30）
+- UI 风格：两种页面——深色渐变的扫描首页（一个大圆形"扫描"按钮、结果摘要卡片）和浅色的应用程序管理器（侧边栏分类 + 列表 + 底部批量操作栏）；以信息和证据为核心，不做红黄绿评分（需求 §29–30）。不要再加流程指引文字和统计磁贴。
+- 列表以"应用"为单位，不以目录为单位：目录扫描只用于归属和残留判断。默认根目录下没有运行、也没有任何关联项的绿色软件不进"所有应用程序"，只在"绿色 / 便携"分类里可见。
+- `tools/check_xaml_resources.py` 在 CI 上检查所有 `{StaticResource}` / `Localize.Get` 键都有定义（WPF 只会在运行时报缺失资源）。
 
 ## 解决方案结构（对应需求 §37）
 
@@ -94,6 +96,7 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 | 6 | `feature/export-cache-shell` | 导出报告、扫描缓存、资源管理器右键菜单 |
 | 7 | `feature/review-fixes` | Windows 专属代码审查修复（回收站布局、启动文件夹清理、AppX 错误等） |
 | 8 | `feature/orphan-processes-custom-roots` | 未归属运行项列表、自定义扫描目录 |
+| 9 | `feature/app-manager-ui` | 第二版界面：扫描首页 + 应用程序管理器；扫描范围外的运行程序成为独立条目 |
 
 ## 验证状态（请如实更新）
 

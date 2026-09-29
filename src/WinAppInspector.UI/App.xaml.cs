@@ -52,9 +52,8 @@ public partial class App : Application
                 services.AddSingleton(sp => new ScanCache(DataDirectory, sp.GetRequiredService<ILogger<ScanCache>>()));
 
                 services.AddSingleton<DetailViewModel>();
-                services.AddSingleton<OverviewViewModel>();
-                services.AddSingleton<ScanViewModel>();
-                services.AddSingleton<UninstallViewModel>();
+                services.AddSingleton<AppManagerViewModel>();
+                services.AddSingleton<UninstallFlowViewModel>();
                 services.AddSingleton<MainViewModel>();
                 services.AddTransient<SettingsViewModel>();
                 services.AddSingleton<MainWindow>();

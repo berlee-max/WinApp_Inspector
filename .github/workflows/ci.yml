@@ -50,6 +50,9 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Check XAML resource keys
+        run: python3 tools/check_xaml_resources.py
+
       - name: Restore
         run: dotnet restore WinAppInspector.sln
 

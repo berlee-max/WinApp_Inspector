@@ -2,9 +2,9 @@ using System.Windows.Controls;
 
 namespace WinAppInspector.UI.Views;
 
-public partial class ScanView : UserControl
+public partial class ManagerView : UserControl
 {
-    public ScanView()
+    public ManagerView()
     {
         InitializeComponent();
     }

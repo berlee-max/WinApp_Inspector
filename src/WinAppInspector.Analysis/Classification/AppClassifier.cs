@@ -47,6 +47,7 @@ public sealed class AppClassifier
         {
             SeedKind.Package => ClassifyPackage(draft, isMicrosoft, reasons),
             SeedKind.Registry => ClassifyRegistry(draft, folders, isMicrosoft, reasons),
+            SeedKind.Process => ClassifyProcess(draft, folders, isMicrosoft, reasons),
             _ => ClassifyDirectory(draft, folders, isMicrosoft, reasons, now),
         };
 
@@ -235,6 +236,33 @@ public sealed class AppClassifier
             default:
                 break;
         }
+    }
+
+    /// <summary>§9.3 / §7.5: a program running from outside every known directory. Portable unless it is clearly a platform or driver piece.</summary>
+    private AppType ClassifyProcess(EntityDraft draft, WindowsKnownFolders folders, bool isMicrosoft, List<Reason> reasons)
+    {
+        reasons.Add(new Reason(ReasonKind.UninstallEntryMissing));
+        reasons.Add(new Reason(ReasonKind.MainExecutableFound, WindowsPath.GetFileName(draft.MainExecutable)));
+        reasons.Add(new Reason(ReasonKind.OfficialUninstallerMissing));
+
+        if (isMicrosoft)
+        {
+            reasons.Add(new Reason(ReasonKind.RegistrySystemComponentFlag, "Microsoft-signed, running outside the scan scope"));
+            return AppType.SystemComponent;
+        }
+
+        if (_publishers.IsHardwareVendor(draft.Publisher) || _publishers.LooksLikeDriver(draft.Name))
+        {
+            reasons.Add(new Reason(ReasonKind.PublisherIsHardwareVendor, draft.Publisher ?? draft.Name));
+            return AppType.HardwareOrDriver;
+        }
+
+        if (folders.IsInUserProfile(draft.MainExecutable))
+        {
+            reasons.Add(new Reason(ReasonKind.LocatedInUserProfile, WindowsPath.GetDirectoryName(draft.MainExecutable)));
+        }
+
+        return AppType.Portable;
     }
 
     private static void AddRuntimeReasons(EntityDraft draft, List<Reason> reasons)

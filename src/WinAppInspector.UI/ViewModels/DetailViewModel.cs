@@ -26,7 +26,16 @@ public sealed partial class DetailViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(Evidence))]
     [NotifyPropertyChangedFor(nameof(VerdictText))]
     [NotifyPropertyChangedFor(nameof(RecommendationText))]
+    [NotifyPropertyChangedFor(nameof(ActionText))]
+    [NotifyPropertyChangedFor(nameof(HasAction))]
     private ApplicationItemViewModel? _current;
+
+    /// <summary>Label of the panel's primary action: official uninstall, manual removal, or none for protected types.</summary>
+    public string ActionText => Current is { HasOfficialUninstaller: true } ? Localize.Get("Uninstall.Action")
+        : Current is { CanRemoveManually: true } ? Localize.Get("Uninstall.ManualAction")
+        : string.Empty;
+
+    public bool HasAction => Current is { IsActionable: true };
 
     public bool HasSelection => Current is not null;
 
