@@ -57,42 +57,68 @@ jobs:
       - name: Test
         run: dotnet test WinAppInspector.sln --configuration Release
 
-      # Portable: a self-contained folder (exe + dlls). Nothing to install and nothing to extract at start-up.
-      # WPF cannot be trimmed, so the folder carries the whole .NET 8 + WPF runtime (~170 MB on disk); a compressed
-      # single-file exe would be the same bytes plus a slow first start, so it is deliberately not built.
-      - name: Publish portable (self-contained folder)
-        run: >
-          dotnet publish src/WinAppInspector.UI/WinAppInspector.UI.csproj
-          --configuration Release --runtime win-x64 --self-contained true
-          -p:PublishSingleFile=false -p:PublishReadyToRun=true -p:DebugType=none
-          -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
-          --output publish/portable
-
-      # Lite: one small exe that needs the .NET 8 Desktop Runtime installed (the apphost offers the download when it is missing).
-      - name: Publish lite (framework-dependent single file)
+      # The app itself: one framework-dependent exe (ReadyToRun so start-up does not JIT everything). It is the
+      # lite package as-is and sits under app\ in the portable package.
+      - name: Publish app (framework-dependent single file)
         run: >
           dotnet publish src/WinAppInspector.UI/WinAppInspector.UI.csproj
           --configuration Release --runtime win-x64 --self-contained false
-          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:DebugType=none
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:PublishReadyToRun=true -p:DebugType=none
           -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
-          --output publish/lite
+          --output publish/app
+
+      # The portable launcher: a NativeAOT exe that needs no .NET, starts app\WinAppInspector.exe and points it at runtime\.
+      - name: Publish launcher (NativeAOT)
+        run: >
+          dotnet publish src/WinAppInspector.Launcher/WinAppInspector.Launcher.csproj
+          --configuration Release --runtime win-x64 -p:PublishAot=true
+          -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
+          --output publish/launcher
+
+      # WPF cannot be trimmed, so the portable package carries the official .NET 8 Desktop Runtime in its own folder
+      # (~150 MB on disk) instead of ~230 loose files next to the exe.
+      - name: Download .NET 8 Desktop Runtime for the portable package
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
+          ./dotnet-install.ps1 -Runtime windowsdesktop -Channel 8.0 -Architecture x64 -InstallDir publish/runtime -NoPath
+          Remove-Item publish/runtime/dotnet.exe -ErrorAction SilentlyContinue
+          Get-ChildItem publish/runtime/shared | ForEach-Object { "$($_.Name): $((Get-ChildItem $_.FullName).Name -join ', ')" }
 
       - name: Package
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item README.md publish/portable/
-          Copy-Item README.md publish/lite/
-          # The portable zip unpacks into a folder of its own so the dlls do not spill into Downloads.
-          New-Item -ItemType Directory -Force -Path "stage/WinAppInspector-$v" | Out-Null
-          Copy-Item publish/portable/* "stage/WinAppInspector-$v" -Recurse
-          Compress-Archive -Path "stage/WinAppInspector-$v" -DestinationPath "dist/WinAppInspector-$v-win-x64-portable.zip"
-          Compress-Archive -Path publish/lite/* -DestinationPath "dist/WinAppInspector-$v-win-x64-lite.zip"
-          "portable folder on disk: {0:N0} MB" -f ((Get-ChildItem publish/portable -Recurse | Measure-Object Length -Sum).Sum / 1MB)
+
+          # Portable: WinAppInspector.exe (launcher) + README + app\ + runtime\, inside a folder of its own.
+          $root = "stage/WinAppInspector-$v"
+          New-Item -ItemType Directory -Force -Path "$root/app", "$root/runtime" | Out-Null
+          Copy-Item publish/launcher/WinAppInspector.exe $root/
+          Copy-Item README.md $root/
+          Copy-Item publish/app/WinAppInspector.exe "$root/app/"
+          Copy-Item publish/runtime/* "$root/runtime" -Recurse
+          Compress-Archive -Path $root -DestinationPath "dist/WinAppInspector-$v-win-x64-portable.zip"
+
+          # Lite: the same app exe on its own; needs the .NET 8 Desktop Runtime installed.
+          New-Item -ItemType Directory -Force -Path stage/lite | Out-Null
+          Copy-Item publish/app/WinAppInspector.exe stage/lite/
+          Copy-Item README.md stage/lite/
+          Compress-Archive -Path stage/lite/* -DestinationPath "dist/WinAppInspector-$v-win-x64-lite.zip"
+
+          "portable folder on disk: {0:N0} MB" -f ((Get-ChildItem $root -Recurse | Measure-Object Length -Sum).Sum / 1MB)
           Get-ChildItem dist | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
           Get-FileHash dist/*.zip -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS.txt
           Get-Content dist/SHA256SUMS.txt
+
+      # Both packages must actually start on Windows before anything is published.
+      - name: Start the portable package (self-test through the launcher)
+        shell: pwsh
+        run: ./tools/smoke-launch.ps1 -Path "stage/WinAppInspector-${{ steps.version.outputs.version }}/WinAppInspector.exe"
+
+      - name: Start the lite package (self-test)
+        shell: pwsh
+        run: ./tools/smoke-launch.ps1 -Path stage/lite/WinAppInspector.exe
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -112,8 +138,8 @@ jobs:
 
             | 文件 | 说明 |
             |---|---|
-            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-portable.zip` | **便携版**。解压得到一个文件夹，运行里面的 `WinAppInspector.exe`；不需要安装 .NET，启动不解压。因为 WPF 无法裁剪，文件夹带完整运行时，解压后约 170 MB。 |
-            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-lite.zip` | **精简版**，单个 exe 约 7 MB。需要已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)（没装时 exe 会提示下载）。 |
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-portable.zip` | **便携版**。解压得到一个文件夹，运行里面的 `WinAppInspector.exe`；不需要安装 .NET。根目录只有启动器和 `app\`、`runtime\` 两个子目录，运行时带完整的 .NET 8 桌面运行时（WPF 无法裁剪），解压后约 150 MB。 |
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-lite.zip` | **精简版**，单个 exe 约 8 MB。需要已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)（没装时 exe 会提示下载）。 |
             | `SHA256SUMS.txt` | 校验和。 |
 
             要求 Windows 10 1809 及以上，64 位。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"，选择"仍要运行"。

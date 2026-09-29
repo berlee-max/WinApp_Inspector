@@ -110,7 +110,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         if (Draft.ExplorerContextMenu != _shell.IsRegistered)
         {
             var (ok, error) = Draft.ExplorerContextMenu
-                ? _shell.Register(Environment.ProcessPath ?? System.IO.Path.Combine(AppContext.BaseDirectory, "WinAppInspector.exe"), Localize.Get("Shell.MenuText"))
+                ? _shell.Register(App.ExecutableForShell, Localize.Get("Shell.MenuText"))
                 : _shell.Unregister();
             if (!ok)
             {

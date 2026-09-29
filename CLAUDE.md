@@ -15,7 +15,8 @@ Windows 10/11 桌面工具：发现第三方软件、判断归属、调用官方
 - 测试：xUnit（+ FluentAssertions 可选）
 - UI 风格：两种页面——深色渐变的扫描首页（一个大圆形"扫描"按钮、结果摘要卡片）和浅色的应用程序管理器（侧边栏分类 + 列表 + 底部批量操作栏）；以信息和证据为核心，不做红黄绿评分（需求 §29–30）。不要再加流程指引文字和统计磁贴。
 - 列表以"应用"为单位，不以目录为单位：目录扫描只用于归属和残留判断。默认根目录下没有运行、也没有任何关联项的绿色软件不进"所有应用程序"，只在"绿色 / 便携"分类里可见。
-- `tools/check_xaml_resources.py` 在 CI 上检查所有 `{StaticResource}` / `Localize.Get` 键都有定义（WPF 只会在运行时报缺失资源）。
+- `tools/check_xaml_resources.py` 在 CI 上检查所有 `{StaticResource}` / `Localize.Get` 键都有定义、没有重复（同一文件内或跨 `Strings.zh-CN.xaml` / `Theme.xaml`；WPF 只会在运行时报缺失资源，跨文件重名会让 `Text="{StaticResource X}"` 拿到一个 Style 而在窗口构造时崩溃）。字符串键和样式键不要同名。
+- 任何未捕获异常都由 `CrashReporter` 写到 `%LocalAppData%\WinAppInspector\logs\crash-*.log` 并弹框；`WinAppInspector.exe --self-test` 会显示窗口、切换每个页面后以 0 退出，CI 的 Windows 任务和发布流程都用 `tools/smoke-launch.ps1` 真机跑一次，启动失败的构建不会进入 Release。
 
 ## 解决方案结构（对应需求 §37）
 
@@ -26,6 +27,7 @@ src/WinAppInspector.Analysis    net8.0          AppResolver / RiskClassifier / R
 src/WinAppInspector.Scanners    net8.0-windows  Registry / Directory / Appx / Process / Service / Startup / Task 扫描器
 src/WinAppInspector.Actions     net8.0-windows  UninstallManager / CleanupManager / RestorePointManager
 src/WinAppInspector.UI          net8.0-windows  WPF 应用：Views / ViewModels / Controls
+src/WinAppInspector.Launcher    net8.0-windows  便携版启动器（发布时 NativeAOT）：设置 DOTNET_ROOT=runtime\ 后启动 app\WinAppInspector.exe
 tests/WinAppInspector.Core.Tests      net8.0
 tests/WinAppInspector.Analysis.Tests  net8.0
 ```
@@ -104,10 +106,13 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 | 7 | `feature/review-fixes` | Windows 专属代码审查修复（回收站布局、启动文件夹清理、AppX 错误等） |
 | 8 | `feature/orphan-processes-custom-roots` | 未归属运行项列表、自定义扫描目录 |
 | 9 | `feature/app-manager-ui` | 第二版界面：扫描首页 + 应用程序管理器；扫描范围外的运行程序成为独立条目 |
+| 10 | `fix/startup-crash-launcher` | 修复启动即崩溃（字符串与样式重名）；崩溃日志与错误框；`--self-test` 在 CI 真机启动；便携版改为启动器 + `app\` + `runtime\`；应用图标 |
 
 ## 验证状态（请如实更新）
 
 - 在 Linux 上：`dotnet build` 全部通过（0 警告），Core / Analysis 单元测试全部通过。
 - 在 Windows 上（CI windows-latest，Windows Server 2025）：`tests/WinAppInspector.Scanners.Tests` 中的 `[WindowsFact]` 冒烟测试在每个 PR 上真实执行并全部通过，覆盖注册表 / AppX（PackageManager 与 PowerShell）/ 目录 / 进程 / 服务 / 启动项 / 计划任务扫描器、WinVerifyTrust 签名读取、操作日志、注册表探测、临时目录的回收站删除、Startup 文件夹清理和卸载管理器的拒绝路径。
 - 首次 Windows 运行暴露并已修复的问题（都在 Linux 无法执行的代码里）：签名者取的是证书 CN（".NET"）而不是 O（"Microsoft Corporation"）；根目录计划任务的 `TaskPath` 为空；`SHFILEOPSTRUCT` 用了 `Pack=1`（32 位布局），x64 上 `SHFileOperationW` 直接 AccessViolation。
-- 仍未在 Windows 上验证：WPF 界面的运行时绑定与布局（只验证过编译；关注输出窗口的 System.Windows.Data Error）、对真实软件的卸载与残留清理、资源管理器右键菜单注册与 `--analyze` 启动参数、系统还原点创建。
+- 用户首次在 Windows 上运行 v0.1.0-preview.2：便携版与精简版双击都没有任何反应。根因是 `Manager.Back` 同时是字符串键和样式键，主窗口构造时 XamlParseException，进程在窗口出现前退出且没有任何提示。已修复，并加了崩溃日志、`--self-test` 和 CI 真机启动。
+- 在 Windows 上（CI）：`--self-test` 会启动 WPF 界面并渲染首页 / 扫描中 / 摘要 / 管理器四个页面（验证 XAML 与 DI 能加载），发布流程对便携版（经启动器）和精简版各跑一次。
+- 仍未在 Windows 上验证：界面的实际布局效果与数据绑定（关注输出窗口的 System.Windows.Data Error）、对真实软件的卸载与残留清理、资源管理器右键菜单注册与 `--analyze` 启动参数、系统还原点创建。
