@@ -9,6 +9,8 @@ public enum SeedKind
     Registry = 0,
     Package = 1,
     Directory = 2,
+    /// <summary>A running program whose executable lies outside every discovered directory (a portable tool started from elsewhere).</summary>
+    Process = 3,
 }
 
 /// <summary>

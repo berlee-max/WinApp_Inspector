@@ -437,6 +437,31 @@ public class ApplicationResolverTests
     // ---- Orphans --------------------------------------------------------------------------------------------------
 
     [Fact]
+    public void Running_program_outside_the_scan_scope_becomes_a_portable_entity_without_deletable_folders()
+    {
+        var b = new SnapshotBuilder();
+        var exe = @"D:\Tools\Everything\Everything.exe";
+        b.Process(exe, 20).Process(exe, 21)
+         .Exe(exe, productName: "Everything", companyName: "voidtools", version: "1.4.1", signer: "voidtools")
+         .Process($@"{b.Folders.SystemRoot}\explorer.exe", 30);
+
+        var apps = Resolve(b).Applications;
+
+        var tool = apps.Should().ContainSingle().Subject;
+        tool.Name.Should().Be("Everything");
+        tool.Publisher.Should().Be("voidtools");
+        tool.Version.Should().Be("1.4.1");
+        tool.AppType.Should().Be(AppType.Portable);
+        tool.IsRunning.Should().BeTrue();
+        tool.Processes.Should().HaveCount(2);
+        tool.MainExecutable.Should().Be(exe);
+        tool.InstallLocation.Should().BeNull("the folder a stray program runs from is never offered for deletion");
+        tool.Directories.Should().BeEmpty();
+        tool.HasOfficialUninstaller.Should().BeFalse();
+        tool.Reasons.Should().Contain(r => r.Kind == ReasonKind.RunningProcessFound);
+    }
+
+    [Fact]
     public void Running_processes_outside_every_known_directory_are_reported_as_orphans()
     {
         var b = new SnapshotBuilder();

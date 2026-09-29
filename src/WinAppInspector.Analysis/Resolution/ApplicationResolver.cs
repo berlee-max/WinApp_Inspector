@@ -69,6 +69,7 @@ public sealed class ApplicationResolver : IApplicationResolver
         AttachShortcuts(snapshot, drafts);
         AttachDirectories(snapshot, drafts);
         var (orphanStartup, orphanServices, orphanTasks, orphanProcesses) = LinkRuntime(snapshot, drafts);
+        SeedFromOrphanProcesses(snapshot, drafts, orphanProcesses);
 
         var entities = drafts.Select(d => Finalize(d, snapshot)).OrderBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
         _logger.LogInformation("Resolved {Count} applications from {Registry} registry entries, {Packages} packages and {Directories} directories",
@@ -179,6 +180,54 @@ public sealed class ApplicationResolver : IApplicationResolver
                 owner.Shortcuts.Add(shortcut);
                 owner.Sources |= DiscoverySource.Shortcut;
             }
+        }
+    }
+
+    // ---- Running programs outside the scan scope -------------------------------------------------------------------
+
+    /// <summary>
+    /// A program that is running right now but whose executable is in no discovered directory is a portable tool started
+    /// from outside the scan scope (§7.5, §9.3). It becomes an entity of its own so the user sees it in the list, described
+    /// from its version resource and signature. It deliberately gets no InstallLocation and no directory: the folder it
+    /// runs from (a USB stick, Downloads, the Desktop) is not something this tool may offer for deletion.
+    /// </summary>
+    private void SeedFromOrphanProcesses(ScanSnapshot snapshot, List<EntityDraft> drafts, List<ProcessRecord> orphanProcesses)
+    {
+        foreach (var group in orphanProcesses
+                     .Where(p => p.ExecutablePath is not null && !WindowsPath.IsSameOrUnder(p.ExecutablePath, snapshot.Folders.WindowsApps))
+                     .GroupBy(p => WindowsPath.Normalize(p.ExecutablePath!), StringComparer.OrdinalIgnoreCase))
+        {
+            var exe = group.Key;
+            var metadata = snapshot.MetadataOf(exe);
+            var signature = snapshot.SignatureOf(exe);
+            var fileName = WindowsPath.GetFileName(exe);
+            var baseName = fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? fileName[..^4] : fileName;
+            var name = metadata?.ProductName is { Length: > 0 } product ? product : baseName;
+
+            var draft = new EntityDraft
+            {
+                Id = "proc:" + exe,
+                Seed = SeedKind.Process,
+                Name = name,
+                Publisher = metadata?.CompanyName ?? (signature is { IsValid: true } ? signature.Publisher : null),
+                Version = metadata?.ProductVersion ?? metadata?.FileVersion,
+                MainExecutable = exe,
+                IconPath = exe,
+                Sources = DiscoverySource.Process,
+            };
+            if (metadata is not null)
+            {
+                draft.Executables.Add(metadata);
+                draft.Sources |= DiscoverySource.Executable;
+            }
+
+            foreach (var process in group)
+            {
+                draft.Processes.Add(process);
+            }
+
+            draft.AddEvidence(EvidenceKind.RunningProcessInDirectory, $"{fileName} (PID {string.Join(", ", group.Select(p => p.ProcessId))}) outside the scan scope");
+            drafts.Add(draft);
         }
     }
 
@@ -503,7 +552,7 @@ public sealed class ApplicationResolver : IApplicationResolver
             }
         }
 
-        draft.MainExecutable = _executables.SelectMainExecutable(draft, snapshot);
+        draft.MainExecutable = _executables.SelectMainExecutable(draft, snapshot) ?? draft.MainExecutable;
         var signatureSource = draft.MainExecutable ?? CommandLine.ExtractExecutable(draft.UninstallCommand);
         if (snapshot.SignatureOf(signatureSource) is { } signature)
         {
