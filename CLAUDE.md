@@ -40,6 +40,12 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 - 若某个 `net8.0-windows` 项目确实无法在非 Windows 上编译，用解决方案筛选器（.slnf）把它排除在跨平台构建之外，并在 PR 中说明，不要静默跳过
 - 真实运行和手动测试只能在 Windows 上；`.github/workflows/ci.yml` 在 `windows-latest` 上做 build + test，可再加一个 `ubuntu-latest` 任务验证跨平台编译
 - 沙箱没有 .NET SDK 时，用 `https://dot.net/v1/dotnet-install.sh --channel 8.0` 安装到 `~/.dotnet`
+- 若 `builds.dotnet.microsoft.com` 被网络策略拦截，改用 `packages.microsoft.com`（可达）：从
+  `https://packages.microsoft.com/ubuntu/22.04/prod/pool/main/d/` 下载 Microsoft 官方构建的
+  `dotnet-sdk-8.0`、`dotnet-runtime-8.0`、`dotnet-hostfxr-8.0`、`dotnet-host`、`dotnet-targeting-pack-8.0`、
+  `dotnet-apphost-pack-8.0`、`aspnetcore-runtime-8.0`、`aspnetcore-targeting-pack-8.0`、`netstandard-targeting-pack-2.1`
+  的 .deb，`dpkg -x` 解包后把 `usr/share/dotnet` 或 `usr/lib/dotnet` 的内容合并到 `~/.dotnet`。
+  注意：Ubuntu 自带的 `apt install dotnet-sdk-8.0` 是 Canonical 源码构建，缺少 `Microsoft.NET.Sdk.WindowsDesktop`，无法编译 WPF 项目。
 
 ## 安全红线（需求 §5、§11、§23、§24、§45）
 

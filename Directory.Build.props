@@ -1,0 +1,30 @@
+<Project>
+
+  <!--
+    Shared build settings for every project in the solution.
+    EnableWindowsTargeting lets the net8.0-windows projects (Scanners, Actions, UI)
+    compile on macOS / Linux; they can only run on Windows.
+  -->
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>WinApp Inspector</Company>
+    <Product>WinApp Inspector</Product>
+    <Version>0.1.0</Version>
+    <Copyright>Copyright (c) WinApp Inspector contributors</Copyright>
+  </PropertyGroup>
+
+</Project>

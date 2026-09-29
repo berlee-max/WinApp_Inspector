@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>WinAppInspector.UI</RootNamespace>
+    <AssemblyName>WinAppInspector</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Portable "green" build target (§ product form): single self-contained exe. -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinAppInspector.Core\WinAppInspector.Core.csproj" />
+    <ProjectReference Include="..\WinAppInspector.Analysis\WinAppInspector.Analysis.csproj" />
+    <ProjectReference Include="..\WinAppInspector.Scanners\WinAppInspector.Scanners.csproj" />
+    <ProjectReference Include="..\WinAppInspector.Actions\WinAppInspector.Actions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>
