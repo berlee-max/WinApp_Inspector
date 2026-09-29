@@ -1,0 +1,42 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+  <!-- All user-facing text lives here (Simplified Chinese). Keys are English identifiers. -->
+
+  <sys:String x:Key="App.Title">WinApp Inspector</sys:String>
+  <sys:String x:Key="App.Tagline">看清电脑里到底装了什么、这些文件属于谁、应该怎么卸载</sys:String>
+
+  <!-- §12 navigation -->
+  <sys:String x:Key="Nav.Overview">软件总览</sys:String>
+  <sys:String x:Key="Nav.Scan">程序扫描</sys:String>
+  <sys:String x:Key="Nav.Uninstall">卸载与清理</sys:String>
+  <sys:String x:Key="Nav.Rescan">重新扫描</sys:String>
+  <sys:String x:Key="Nav.Settings">设置</sys:String>
+  <sys:String x:Key="Nav.About">关于</sys:String>
+
+  <!-- §13.1 statistics -->
+  <sys:String x:Key="Stats.Identified">已识别应用</sys:String>
+  <sys:String x:Key="Stats.ThirdParty">第三方程序</sys:String>
+  <sys:String x:Key="Stats.Portable">便携应用</sys:String>
+  <sys:String x:Key="Stats.Residue">疑似残留</sys:String>
+  <sys:String x:Key="Stats.System">系统组件</sys:String>
+  <sys:String x:Key="Stats.Undetermined">待判断</sys:String>
+
+  <!-- §9 application types -->
+  <sys:String x:Key="AppType.Undetermined">待判断</sys:String>
+  <sys:String x:Key="AppType.ThirdPartyInstalled">第三方应用</sys:String>
+  <sys:String x:Key="AppType.StoreApp">商店应用</sys:String>
+  <sys:String x:Key="AppType.Portable">便携应用</sys:String>
+  <sys:String x:Key="AppType.UserLevel">用户级应用</sys:String>
+  <sys:String x:Key="AppType.SuspectedResidue">疑似残留</sys:String>
+  <sys:String x:Key="AppType.AppCache">应用缓存</sys:String>
+  <sys:String x:Key="AppType.HardwareOrDriver">硬件或驱动组件</sys:String>
+  <sys:String x:Key="AppType.SharedRuntime">共享运行组件</sys:String>
+  <sys:String x:Key="AppType.SystemComponent">系统组件</sys:String>
+
+  <!-- Placeholders for pages not built yet -->
+  <sys:String x:Key="Placeholder.NotBuilt">此页面将在后续阶段实现。</sys:String>
+  <sys:String x:Key="Placeholder.Boundary">发现程序 → 识别程序 → 解释依据 → 查看详情 → 调用官方卸载 → 识别明确残留 → 用户确认后清理</sys:String>
+
+</ResourceDictionary>

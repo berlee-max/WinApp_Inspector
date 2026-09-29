@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  windows:
+    name: Build and test (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore WinAppInspector.sln
+
+      - name: Build
+        run: dotnet build WinAppInspector.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test WinAppInspector.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-windows
+          path: TestResults
+
+  linux:
+    # Verifies that the whole solution (including the net8.0-windows projects) compiles
+    # on a non-Windows host via EnableWindowsTargeting, and runs the platform-neutral tests.
+    name: Cross-platform build and test (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore WinAppInspector.sln
+
+      - name: Build
+        run: dotnet build WinAppInspector.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test WinAppInspector.sln --configuration Release --no-build
