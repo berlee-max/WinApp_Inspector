@@ -18,6 +18,12 @@ public sealed record ScanOptions
         ScanRoot.LocalLowAppData,
     };
 
+    /// <summary>
+    /// Extra directories the user added to the scan scope (portable software folders such as <c>D:\Tools</c>).
+    /// Each is treated like a fixed root: its immediate sub-directories become candidates, the directory itself never does.
+    /// </summary>
+    public IReadOnlyList<string> CustomDirectories { get; init; } = [];
+
     /// <summary>§26.2 扫描数字签名.</summary>
     public bool ReadSignatures { get; init; } = true;
 

@@ -24,6 +24,28 @@
       </StackPanel>
     </Border>
 
+    <!-- User-added folders for portable software (§9.3, §26.1) -->
+    <TextBlock Text="{StaticResource Settings.CustomDirectories}" Style="{StaticResource Text.Section}" Margin="0,16,0,8" />
+    <Border Style="{StaticResource Card}">
+      <StackPanel>
+        <TextBlock Text="{StaticResource Settings.CustomDirectoriesHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,8" />
+        <ListBox ItemsSource="{Binding CustomDirectories}" SelectedItem="{Binding SelectedCustomDirectory}"
+                 MinHeight="48" MaxHeight="120" BorderThickness="0" Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}" Style="{StaticResource Text.Mono}" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="{Binding CustomDirectoryError}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,4,0,0"
+                   Visibility="{Binding CustomDirectoryError, Converter={StaticResource EmptyToCollapsed}}" />
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Settings.AddDirectory}" Command="{Binding AddCustomDirectoryCommand}" />
+          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Settings.RemoveDirectory}" Command="{Binding RemoveCustomDirectoryCommand}" Margin="8,0,0,0" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
     <TextBlock Text="{StaticResource Settings.Defaults}" Style="{StaticResource Text.Section}" Margin="0,16,0,8" />
     <Border Style="{StaticResource Card}">
       <StackPanel>

@@ -53,6 +53,9 @@ public class ProtectedPathRuleTests
     [InlineData(@"C:\Users\Alice\AppData\LocalLow", PathProtectionKind.ScanRoot)]
     [InlineData(@"C:\Users", PathProtectionKind.UserProfileRoot)]
     [InlineData(@"C:\Users\Alice", PathProtectionKind.UserProfileRoot)]
+    [InlineData(@"C:\Users\Bob", PathProtectionKind.UserProfileRoot)]
+    [InlineData(@"C:\Users\Public", PathProtectionKind.UserProfileRoot)]
+    [InlineData(@"C:\Users\Default\", PathProtectionKind.UserProfileRoot)]
     public void Scan_roots_themselves_are_protected(string path, PathProtectionKind kind)
     {
         var check = _rule.Check(path);

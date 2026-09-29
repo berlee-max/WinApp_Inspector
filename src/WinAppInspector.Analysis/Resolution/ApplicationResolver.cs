@@ -9,12 +9,17 @@ using WinAppInspector.Core.Scanning;
 
 namespace WinAppInspector.Analysis.Resolution;
 
-/// <summary>Entities plus the runtime items that could not be attributed to any application.</summary>
+/// <summary>
+/// Entities plus the runtime items that could not be attributed to any application. Orphan processes are the running
+/// programs whose executable lies outside every discovered directory and outside the Windows directory: typically
+/// portable software started from a folder that is not in the scan scope (§7.5, §9.3).
+/// </summary>
 public sealed record ResolutionResult(
     IReadOnlyList<ApplicationEntity> Applications,
     IReadOnlyList<StartupItemRecord> OrphanStartupItems,
     IReadOnlyList<ServiceRecord> OrphanServices,
-    IReadOnlyList<ScheduledTaskRecord> OrphanScheduledTasks);
+    IReadOnlyList<ScheduledTaskRecord> OrphanScheduledTasks,
+    IReadOnlyList<ProcessRecord> OrphanProcesses);
 
 public interface IApplicationResolver
 {
@@ -63,13 +68,13 @@ public sealed class ApplicationResolver : IApplicationResolver
         SeedFromPackages(snapshot, drafts);
         AttachShortcuts(snapshot, drafts);
         AttachDirectories(snapshot, drafts);
-        var (orphanStartup, orphanServices, orphanTasks) = LinkRuntime(snapshot, drafts);
+        var (orphanStartup, orphanServices, orphanTasks, orphanProcesses) = LinkRuntime(snapshot, drafts);
 
         var entities = drafts.Select(d => Finalize(d, snapshot)).OrderBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
         _logger.LogInformation("Resolved {Count} applications from {Registry} registry entries, {Packages} packages and {Directories} directories",
             entities.Count, snapshot.RegistryEntries.Count, snapshot.Packages.Count, snapshot.Directories.Count);
 
-        return new ResolutionResult(entities, orphanStartup, orphanServices, orphanTasks);
+        return new ResolutionResult(entities, orphanStartup, orphanServices, orphanTasks, orphanProcesses);
     }
 
     // ---- Seeding -------------------------------------------------------------------------------------------------
@@ -329,11 +334,12 @@ public sealed class ApplicationResolver : IApplicationResolver
 
     // ---- Runtime links -------------------------------------------------------------------------------------------
 
-    private static (List<StartupItemRecord>, List<ServiceRecord>, List<ScheduledTaskRecord>) LinkRuntime(ScanSnapshot snapshot, List<EntityDraft> drafts)
+    private static (List<StartupItemRecord>, List<ServiceRecord>, List<ScheduledTaskRecord>, List<ProcessRecord>) LinkRuntime(ScanSnapshot snapshot, List<EntityDraft> drafts)
     {
         var orphanStartup = new List<StartupItemRecord>();
         var orphanServices = new List<ServiceRecord>();
         var orphanTasks = new List<ScheduledTaskRecord>();
+        var orphanProcesses = new List<ProcessRecord>();
 
         foreach (var process in snapshot.Processes)
         {
@@ -343,6 +349,11 @@ public sealed class ApplicationResolver : IApplicationResolver
                 owner.Processes.Add(process);
                 owner.Sources |= DiscoverySource.Process;
                 owner.AddEvidence(EvidenceKind.RunningProcessInDirectory, $"{process.Name} (PID {process.ProcessId}) in {directory}");
+            }
+            else if (process.ExecutablePath is not null && !IsSystemPath(snapshot.Folders, process.ExecutablePath))
+            {
+                // A process whose image path is unknown (access denied) cannot be placed anywhere and is not reported.
+                orphanProcesses.Add(process);
             }
         }
 
@@ -391,7 +402,7 @@ public sealed class ApplicationResolver : IApplicationResolver
             }
         }
 
-        return (orphanStartup, orphanServices, orphanTasks);
+        return (orphanStartup, orphanServices, orphanTasks, orphanProcesses);
     }
 
     /// <summary>The draft owning the most specific (longest) non-shared directory containing <paramref name="path"/>.</summary>

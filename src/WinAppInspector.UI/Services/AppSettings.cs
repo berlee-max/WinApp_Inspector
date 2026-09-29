@@ -18,6 +18,9 @@ public sealed class AppSettings
     public bool ScanRoamingAppData { get; set; } = true;
     public bool ScanLocalLowAppData { get; set; } = true;
 
+    /// <summary>User-added folders (portable software collections such as <c>D:\Tools</c>); their sub-folders are scanned like the fixed roots.</summary>
+    public List<string> CustomScanDirectories { get; set; } = [];
+
     // §26.2 defaults
     public bool RecycleBinFirst { get; set; } = true;
     public bool CreateRestorePointBeforeUninstall { get; set; }
@@ -42,6 +45,7 @@ public sealed class AppSettings
         return ScanOptions.Default with
         {
             DirectoryRoots = roots,
+            CustomDirectories = CustomScanDirectories.Where(d => !string.IsNullOrWhiteSpace(d)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray(),
             ReadSignatures = ReadSignatures,
             ScanServices = ScanServices,
             ScanScheduledTasks = ScanScheduledTasks,
@@ -49,7 +53,12 @@ public sealed class AppSettings
         };
     }
 
-    public AppSettings Clone() => (AppSettings)MemberwiseClone();
+    public AppSettings Clone()
+    {
+        var copy = (AppSettings)MemberwiseClone();
+        copy.CustomScanDirectories = [.. CustomScanDirectories];
+        return copy;
+    }
 
     public void CopyFrom(AppSettings other)
     {
@@ -61,6 +70,8 @@ public sealed class AppSettings
                 property.SetValue(this, property.GetValue(other));
             }
         }
+
+        CustomScanDirectories = [.. other.CustomScanDirectories];
     }
 }
 

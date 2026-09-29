@@ -92,6 +92,8 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 | 4 | `feature/ui` | WPF 三页面 + 详情面板 + 设置 + 搜索 |
 | 5 | `feature/uninstall-cleanup` | 官方卸载、残留扫描、手动清理、操作日志 |
 | 6 | `feature/export-cache-shell` | 导出报告、扫描缓存、资源管理器右键菜单 |
+| 7 | `feature/review-fixes` | Windows 专属代码审查修复（回收站布局、启动文件夹清理、AppX 错误等） |
+| 8 | `feature/orphan-processes-custom-roots` | 未归属运行项列表、自定义扫描目录 |
 
 ## 验证状态（请如实更新）
 

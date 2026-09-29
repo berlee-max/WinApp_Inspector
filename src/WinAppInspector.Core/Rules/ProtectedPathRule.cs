@@ -106,6 +106,12 @@ public sealed class ProtectedPathRule
             }
         }
 
+        // Every account folder under Users (other users, Public, Default) is a profile root, not just the current one.
+        if (WindowsPath.AreEqual(WindowsPath.GetDirectoryName(p), _folders.UsersRoot))
+        {
+            return new PathProtection(true, PathProtectionKind.UserProfileRoot, p);
+        }
+
         return PathProtection.Allowed;
     }
 
