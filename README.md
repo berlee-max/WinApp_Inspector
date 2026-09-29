@@ -41,10 +41,22 @@ tests/WinAppInspector.Scanners.Tests    Windows 冒烟测试（[WindowsFact]，�
 
 [Releases](https://github.com/berlee-max/WinApp_Inspector/releases) 提供两种 win-x64 包：
 
-- `WinAppInspector-<版本>-win-x64-portable.zip`：**便携版**。解压得到一个文件夹，运行 `WinAppInspector.exe`，不需要安装 .NET，启动不解压。WPF 不支持裁剪，所以文件夹带完整的 .NET 8 + WPF 运行时，解压后约 170 MB；这是自包含 WPF 程序的下限。
-- `WinAppInspector-<版本>-win-x64-lite.zip`：**精简版**，单个 exe 约 7 MB，需要已安装 .NET 8 Desktop Runtime（没装时 exe 会提示下载）。
+- `WinAppInspector-<版本>-win-x64-portable.zip`：**便携版**，不需要安装 .NET。解压得到一个文件夹：
+
+  ```text
+  WinAppInspector-<版本>\
+    WinAppInspector.exe   启动器（原生程序，双击这个）
+    README.md
+    app\WinAppInspector.exe   程序本体
+    runtime\                  自带的 .NET 8 桌面运行时
+  ```
+
+  启动器把 `runtime\` 交给 `app\WinAppInspector.exe` 使用，然后退出。WPF 不支持裁剪，所以 `runtime\` 是完整的 .NET 8 + WPF 运行时，解压后约 150 MB；这是自包含 WPF 程序的下限。
+- `WinAppInspector-<版本>-win-x64-lite.zip`：**精简版**，单个 exe 约 8 MB（与便携版的 `app\WinAppInspector.exe` 是同一个文件），需要已安装 .NET 8 Desktop Runtime（没装时 exe 会提示下载）。
 
 不提供压缩的单文件自包含 exe：字节数一样多，却要在每次启动时解压到临时目录。
+
+如果程序没有出现窗口，请查看 `%LocalAppData%\WinAppInspector\logs\crash-*.log`，启动失败时会弹出错误框并把异常写到那里。
 
 要求 Windows 10 1809 及以上。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"。发布由 `.github/workflows/release.yml` 完成：推送 `v*` 标签，或在 Actions 里手动运行并填写版本号。在正式版发布之前，所有版本（`v0.1.1`、`v0.2.0` 等）都是测试版，标记为预发布；只有手动运行并勾选 `stable` 才会生成正式版。
 

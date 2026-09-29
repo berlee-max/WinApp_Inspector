@@ -14,11 +14,18 @@ DICTS = [ROOT / "Resources" / "Strings.zh-CN.xaml", ROOT / "Resources" / "Theme.
 
 defined: set[str] = set()
 problems: list[str] = []
+owner: dict[str, str] = {}
 for d in DICTS:
     keys = re.findall(r'x:Key="([^"]+)"', d.read_text(encoding="utf-8"))
     for key in sorted({k for k in keys if keys.count(k) > 1}):
         # WPF throws ArgumentException while materialising a dictionary with a duplicate key: the app never starts.
         problems.append(f"{d.name}: key '{key}' is defined more than once")
+    for key in keys:
+        # The dictionaries are merged into one scope, so the same key in two files silently shadows the earlier one;
+        # a Text="{StaticResource X}" then receives a Style instead of a string and the window fails to load.
+        if key in owner and owner[key] != d.name:
+            problems.append(f"{d.name}: key '{key}' is also defined in {owner[key]}")
+        owner.setdefault(key, d.name)
     defined.update(keys)
 
 # Keys defined locally inside a view's own <UserControl.Resources> / <Window.Resources> count for that file.

@@ -181,6 +181,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>Used only by <c>--self-test</c>: forces a stage so its page gets laid out and rendered once.</summary>
+    public void ShowStageForSelfTest(ShellStage stage) => Stage = stage;
+
     /// <summary>§33: show the previous results immediately; the user decides when to rescan.</summary>
     public async Task LoadCacheAsync()
     {

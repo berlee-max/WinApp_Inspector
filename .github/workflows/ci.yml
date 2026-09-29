@@ -31,6 +31,11 @@ jobs:
       - name: Test
         run: dotnet test WinAppInspector.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
+      # The WPF app can only be exercised on Windows: start it for real and let it render every page once.
+      - name: Start the app (self-test)
+        shell: pwsh
+        run: ./tools/smoke-launch.ps1 -Path src/WinAppInspector.UI/bin/Release/net8.0-windows10.0.17763.0/WinAppInspector.exe
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4

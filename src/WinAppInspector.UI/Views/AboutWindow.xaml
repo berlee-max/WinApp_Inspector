@@ -7,8 +7,13 @@
         Background="{StaticResource Brush.WindowBackground}" FontFamily="{StaticResource Font.UI}">
 
   <StackPanel Margin="20">
-    <TextBlock Text="{StaticResource App.Title}" Style="{StaticResource Text.Title}" />
-    <TextBlock Text="{StaticResource App.Version}" Style="{StaticResource Text.Caption}" Margin="0,4,0,12" />
+    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+      <Image Source="/Assets/app.png" Width="48" Height="48" VerticalAlignment="Center" Margin="0,0,14,0" />
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="{StaticResource App.Title}" Style="{StaticResource Text.Title}" />
+        <TextBlock Text="{StaticResource App.Version}" Style="{StaticResource Text.Caption}" Margin="0,4,0,0" />
+      </StackPanel>
+    </StackPanel>
     <TextBlock Text="{StaticResource App.AboutText}" Style="{StaticResource Text.Body}" />
     <TextBlock Text="{StaticResource Placeholder.Boundary}" Style="{StaticResource Text.Caption}" Margin="0,12,0,0" />
     <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource About.Close}" HorizontalAlignment="Right" MinWidth="80" Margin="0,16,0,0" Click="CloseClick" />

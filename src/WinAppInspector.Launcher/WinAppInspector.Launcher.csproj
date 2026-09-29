@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Entry point of the portable package. It is published with NativeAOT (release.yml passes -p:PublishAot=true), so it
+    runs without any .NET installed, starts app\WinAppInspector.exe and points it at the private runtime\ folder.
+    That keeps the package root to one exe plus two folders instead of ~230 loose runtime files.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <AssemblyName>WinAppInspector</AssemblyName>
+    <RootNamespace>WinAppInspector.Launcher</RootNamespace>
+    <ApplicationIcon>..\WinAppInspector.UI\Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <SelfContained>false</SelfContained>
+    <IsAotCompatible>true</IsAotCompatible>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <DebugType>none</DebugType>
+    <!-- LibraryImport (the AOT-friendly P/Invoke for the error box) generates unsafe marshalling code. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

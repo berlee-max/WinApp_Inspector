@@ -8,10 +8,15 @@
     <RootNamespace>WinAppInspector.UI</RootNamespace>
     <AssemblyName>WinAppInspector</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Portable "green" build target (§ product form): single self-contained exe. -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <!-- Published framework-dependent (see release.yml): the portable package adds a launcher and a private runtime folder. -->
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <SelfContained>false</SelfContained>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WinAppInspector.Core\WinAppInspector.Core.csproj" />

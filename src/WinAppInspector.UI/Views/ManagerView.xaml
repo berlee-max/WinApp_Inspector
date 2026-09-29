@@ -45,7 +45,7 @@
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Style="{StaticResource Manager.Back}" Command="{Binding BackToSummaryCommand}" HorizontalAlignment="Left">
+            <Button Grid.Column="0" Style="{StaticResource Manager.BackButton}" Command="{Binding BackToSummaryCommand}" HorizontalAlignment="Left">
               <TextBlock><Run Text="‹ " FontSize="24" FontWeight="Light" Foreground="{StaticResource Brush.Accent}" /><Run Text="{StaticResource Manager.Back}" /></TextBlock>
             </Button>
             <TextBlock Grid.Column="1" Text="{StaticResource Manager.Title}" Style="{StaticResource Text.Title}" FontSize="16" VerticalAlignment="Center" />
