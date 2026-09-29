@@ -75,15 +75,20 @@ jobs:
           -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
           --output publish/launcher
 
-      # WPF cannot be trimmed, so the portable package carries the official .NET 8 Desktop Runtime in its own folder
-      # (~150 MB on disk) instead of ~230 loose files next to the exe.
-      - name: Download .NET 8 Desktop Runtime for the portable package
+      # WPF cannot be trimmed, so the portable package carries the official .NET 8 runtime in its own folder instead of
+      # ~230 loose files next to the exe. The "windowsdesktop" archive holds only Microsoft.WindowsDesktop.App; the base
+      # runtime (Microsoft.NETCore.App + host\fxr) comes from the "dotnet" archive, so both go into the same folder.
+      - name: Download .NET 8 runtime for the portable package
         shell: pwsh
         run: |
           Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
+          ./dotnet-install.ps1 -Runtime dotnet -Channel 8.0 -Architecture x64 -InstallDir publish/runtime -NoPath
           ./dotnet-install.ps1 -Runtime windowsdesktop -Channel 8.0 -Architecture x64 -InstallDir publish/runtime -NoPath
           Remove-Item publish/runtime/dotnet.exe -ErrorAction SilentlyContinue
-          Get-ChildItem publish/runtime/shared | ForEach-Object { "$($_.Name): $((Get-ChildItem $_.FullName).Name -join ', ')" }
+          foreach ($required in 'host/fxr', 'shared/Microsoft.NETCore.App', 'shared/Microsoft.WindowsDesktop.App') {
+            if (-not (Test-Path "publish/runtime/$required")) { throw "runtime folder is incomplete: $required is missing" }
+            "$required`: $((Get-ChildItem "publish/runtime/$required").Name -join ', ')"
+          }
 
       - name: Package
         shell: pwsh
