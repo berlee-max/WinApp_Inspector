@@ -181,7 +181,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public async Task LoadCacheAsync()
     {
         var cached = await _cache.LoadAsync(CancellationToken.None);
-        if (cached is null || cached.Applications.Count == 0 || _itemsById.Count > 0)
+        // Re-checked after the await: a scan started meanwhile (Explorer --analyze, or the button) must not be overwritten.
+        if (cached is null || cached.Applications.Count == 0 || _itemsById.Count > 0 || _scanCts is not null || Stage == ShellStage.Scanning)
         {
             return;
         }
@@ -353,13 +354,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanStartScan))]
     private async Task StartScanAsync()
     {
-        if (Stage == ShellStage.Scanning)
+        if (Stage == ShellStage.Scanning || _scanCts is not null)
         {
             return;
         }
 
         _sizeCts?.Cancel();
-        _scanCts = new CancellationTokenSource();
+        var cts = new CancellationTokenSource();
+        _scanCts = cts;
         Detail.Current = null;
         Stage = ShellStage.Scanning;
         ProgressIndeterminate = true;
@@ -385,7 +387,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var outcome = await _scanService.ScanAsync(progress, _scanCts.Token);
+            var outcome = await _scanService.ScanAsync(progress, cts.Token);
             _lastSnapshot = outcome.Snapshot;
             _lastScanTime = outcome.Snapshot.ScanTime;
             LoadResults(outcome.Resolution.Applications, outcome.Snapshot.Errors);
@@ -414,8 +416,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
         finally
         {
-            _scanCts.Dispose();
-            _scanCts = null;
+            cts.Dispose();
+            if (ReferenceEquals(_scanCts, cts))
+            {
+                _scanCts = null;
+            }
+
             OpenManagerCommand.NotifyCanExecuteChanged();
         }
     }
@@ -538,7 +544,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
 
             Stage = ShellStage.Manager;
-            Detail.Current = new ApplicationItemViewModel(entity, _icons);
+            Detail.Current = new ApplicationItemViewModel(entity, _icons) { IsAdHoc = true };
             StatusText = Localize.Format("Status.AnalyzedFormat", path, Localize.AppType(entity.AppType));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)

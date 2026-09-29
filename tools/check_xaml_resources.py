@@ -13,11 +13,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent / "src" / "WinAppInspector
 DICTS = [ROOT / "Resources" / "Strings.zh-CN.xaml", ROOT / "Resources" / "Theme.xaml", ROOT / "App.xaml"]
 
 defined: set[str] = set()
+problems: list[str] = []
 for d in DICTS:
-    defined.update(re.findall(r'x:Key="([^"]+)"', d.read_text(encoding="utf-8")))
+    keys = re.findall(r'x:Key="([^"]+)"', d.read_text(encoding="utf-8"))
+    for key in sorted({k for k in keys if keys.count(k) > 1}):
+        # WPF throws ArgumentException while materialising a dictionary with a duplicate key: the app never starts.
+        problems.append(f"{d.name}: key '{key}' is defined more than once")
+    defined.update(keys)
 
 # Keys defined locally inside a view's own <UserControl.Resources> / <Window.Resources> count for that file.
-problems: list[str] = []
 for xaml in ROOT.rglob("*.xaml"):
     if xaml in DICTS or "obj" in xaml.parts or "bin" in xaml.parts:
         continue

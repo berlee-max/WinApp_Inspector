@@ -49,6 +49,12 @@ public sealed class EntityDraft
     public List<ScheduledTaskRecord> ScheduledTasks { get; } = [];
     public List<ExecutableMetadata> Executables { get; } = [];
     public List<ShortcutRecord> Shortcuts { get; } = [];
+
+    /// <summary>
+    /// Folders a registered application is known to run from even though no InstallLocation was recorded (the folder of
+    /// its DisplayIcon executable). Used only to attribute processes and links; never offered for deletion.
+    /// </summary>
+    public List<string> OwnershipHints { get; } = [];
     public List<EvidenceItem> Evidence { get; } = [];
     public List<Reason> Reasons { get; } = [];
 

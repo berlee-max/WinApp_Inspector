@@ -63,7 +63,8 @@ public sealed partial class UninstallFlowViewModel : ObservableObject
     public async Task RunAsync(IReadOnlyList<ApplicationItemViewModel> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var work = items.Where(i => i.IsActionable).ToList();
+        // Defence in depth: IsActionable already excludes protected types (§9.7–9.9), ad-hoc folders and process-only entries.
+        var work = items.Where(i => i.IsActionable && !i.Entity.AppType.IsProtectedByDefault()).ToList();
         if (work.Count == 0)
         {
             _dialogs.Info(Localize.Get("Uninstall.Action"), Localize.Get("Uninstall.NothingActionable"));
@@ -111,6 +112,17 @@ public sealed partial class UninstallFlowViewModel : ObservableObject
                 var app = item.Entity;
                 try
                 {
+                    // In a batch every uninstaller is confirmed on its own as well (§5.1): the exact command, right before it runs.
+                    if (work.Count > 1 && app.HasOfficialUninstaller)
+                    {
+                        var (method, command) = UninstallManager.ChooseRoute(app, preferQuiet: false);
+                        if (!_dialogs.Confirm(Localize.Get("Uninstall.Action"), Localize.Format("Uninstall.ConfirmFormat", app.Name, Localize.UninstallMethod(method)), command))
+                        {
+                            failed.Add($"{app.Name}: {Localize.Get("Uninstall.SkippedByUser")}");
+                            continue;
+                        }
+                    }
+
                     var ok = app.HasOfficialUninstaller
                         ? await UninstallOneAsync(app)
                         : await CleanupAfterAsync(app, afterUninstall: false);

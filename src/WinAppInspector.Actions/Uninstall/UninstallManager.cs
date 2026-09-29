@@ -39,6 +39,13 @@ public sealed class UninstallManager : IUninstallManager
             return new UninstallResult(UninstallOutcome.NotConfirmed, UninstallMethod.None, null, null, "The uninstall was not confirmed by the user.", watch.Elapsed);
         }
 
+        if (app.AppType.IsProtectedByDefault())
+        {
+            // §9.7–9.9: system components, drivers and shared runtimes are kept; no caller may run their uninstaller through this tool.
+            await LogAsync(app, UninstallMethod.None, OperationResult.Skipped, $"Protected type {app.AppType}.", cancellationToken).ConfigureAwait(false);
+            return new UninstallResult(UninstallOutcome.Failed, UninstallMethod.None, null, null, $"{app.AppType} is kept by default and is not uninstalled by this tool.", watch.Elapsed);
+        }
+
         var (method, command) = ChooseRoute(app, request.PreferQuiet);
         if (method == UninstallMethod.None)
         {

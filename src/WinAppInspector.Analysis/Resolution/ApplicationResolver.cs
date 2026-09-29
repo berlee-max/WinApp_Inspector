@@ -95,7 +95,7 @@ public sealed class ApplicationResolver : IApplicationResolver
                 _publishers.Matches(d.Publisher, entry.Publisher) &&
                 string.Equals(d.Version, entry.DisplayVersion, StringComparison.OrdinalIgnoreCase));
 
-            var draft = existing ?? CreateRegistryDraft(entry);
+            var draft = existing ?? CreateRegistryDraft(entry, snapshot.Folders);
             if (existing is null)
             {
                 drafts.Add(draft);
@@ -116,13 +116,13 @@ public sealed class ApplicationResolver : IApplicationResolver
                 continue;
             }
 
-            var draft = CreateRegistryDraft(entry);
+            var draft = CreateRegistryDraft(entry, snapshot.Folders);
             draft.IsHiddenRegistryEntry = true;
             drafts.Add(draft);
         }
     }
 
-    private static EntityDraft CreateRegistryDraft(RegistryUninstallEntry entry)
+    private static EntityDraft CreateRegistryDraft(RegistryUninstallEntry entry, WindowsKnownFolders folders)
     {
         var draft = new EntityDraft
         {
@@ -142,6 +142,20 @@ public sealed class ApplicationResolver : IApplicationResolver
             Sources = DiscoverySource.Registry,
         };
         draft.RegistryEntries.Add(entry);
+
+        // An app installed outside the scan roots without an InstallLocation (D:\Apps\Foo) still names its own executable
+        // in DisplayIcon; remember that folder so its running process is attributed here rather than becoming a stray entry.
+        if (draft.InstallLocation is null)
+        {
+            var iconExe = CommandLine.ExtractExecutable(entry.DisplayIcon?.Split(',')[0]);
+            var iconFolder = WindowsPath.GetDirectoryName(iconExe);
+            if (iconExe is not null && iconExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(iconFolder)
+                && !WindowsPath.IsDriveRoot(iconFolder) && !WindowsPath.IsSameOrUnder(iconFolder, folders.SystemRoot))
+            {
+                draft.OwnershipHints.Add(iconFolder);
+            }
+        }
+
         return draft;
     }
 
@@ -498,6 +512,15 @@ public sealed class ApplicationResolver : IApplicationResolver
             {
                 bestOwner = draft;
                 bestDirectory = draft.InstallLocation;
+            }
+
+            foreach (var hint in draft.OwnershipHints)
+            {
+                if (WindowsPath.IsSameOrUnder(path, hint) && (bestDirectory is null || hint.Length > bestDirectory.Length))
+                {
+                    bestOwner = draft;
+                    bestDirectory = hint;
+                }
             }
         }
 

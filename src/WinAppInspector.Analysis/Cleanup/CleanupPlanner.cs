@@ -105,6 +105,10 @@ public sealed class CleanupPlanner
             });
         }
 
+        // Registry keys of a program that is still running are shown but blocked: removing live configuration is never
+        // a residue cleanup (§21). After an uninstall the process list was cleared above and the keys are removable.
+        var registryBlocker = evaluated.Processes.Count > 0 ? DeletionBlockerKind.ApplicationRunning.ToString() : null;
+
         foreach (var entry in report.RegistryEntries)
         {
             candidates.Add(new CleanupCandidate
@@ -114,6 +118,7 @@ public sealed class CleanupPlanner
                 Detail = entry.DisplayName,
                 CanRecycle = false,
                 RequiresElevation = entry.Scope != RegistryScope.CurrentUser,
+                Blocked = registryBlocker,
             });
         }
 
@@ -125,6 +130,7 @@ public sealed class CleanupPlanner
                 Target = key,
                 CanRecycle = false,
                 RequiresElevation = !key.StartsWith("HKEY_CURRENT_USER", StringComparison.OrdinalIgnoreCase),
+                Blocked = registryBlocker,
             });
         }
 

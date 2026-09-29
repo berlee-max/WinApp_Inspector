@@ -67,11 +67,24 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
     public bool IsSystemLike => Entity.AppType.IsSystemLike();
     public bool HasOfficialUninstaller => Entity.HasOfficialUninstaller;
 
-    /// <summary>§22: no official uninstaller, but a type the user may remove by hand.</summary>
-    public bool CanRemoveManually => !Entity.HasOfficialUninstaller && Entity.AppType.IsEligibleForManualRemoval();
+    /// <summary>§9.7–9.9: system components, drivers and shared runtimes are kept; no removal entry point at all.</summary>
+    public bool IsProtected => Entity.AppType.IsProtectedByDefault();
 
-    /// <summary>True when the bulk action button can do anything with this item.</summary>
-    public bool IsActionable => HasOfficialUninstaller || CanRemoveManually;
+    /// <summary>
+    /// A folder analysed ad hoc (§18 / Explorer context menu) rather than found by the scan. It is shown for information;
+    /// the folder the user pointed at (Desktop, Downloads, a USB stick) is never offered for removal from here.
+    /// </summary>
+    public bool IsAdHoc { get; init; }
+
+    /// <summary>
+    /// §22: no official uninstaller, but a type the user may remove by hand, and something of its own to remove. A program
+    /// known only as a running process (no directory, no install location, no registry entry) has nothing to offer.
+    /// </summary>
+    public bool CanRemoveManually => !Entity.HasOfficialUninstaller && Entity.AppType.IsEligibleForManualRemoval()
+        && (Entity.Directories.Count > 0 || Entity.InstallLocation is not null || Entity.RegistryEntries.Count > 0);
+
+    /// <summary>True when the uninstall / remove action may run for this item.</summary>
+    public bool IsActionable => !IsProtected && !IsAdHoc && (HasOfficialUninstaller || CanRemoveManually);
 
     public SourceKind Source => Entity.Packages.Count > 0 ? SourceKind.Store
         : Entity.RegistryEntries.Count > 0 ? SourceKind.Installed

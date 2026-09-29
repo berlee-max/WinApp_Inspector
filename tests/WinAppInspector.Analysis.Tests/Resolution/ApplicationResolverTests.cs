@@ -437,6 +437,22 @@ public class ApplicationResolverTests
     // ---- Orphans --------------------------------------------------------------------------------------------------
 
     [Fact]
+    public void Registered_app_outside_the_scan_roots_owns_its_running_process_through_its_icon_folder()
+    {
+        var b = new SnapshotBuilder();
+        var exe = @"D:\Apps\Foo\Foo.exe";
+        b.Registry("Foo", "Foo Ltd", uninstallString: @"D:\Apps\Foo\unins000.exe", displayIcon: exe + ",0")
+         .Process(exe, 77);
+
+        var apps = Resolve(b).Applications;
+
+        var foo = apps.Should().ContainSingle().Subject;
+        foo.Name.Should().Be("Foo");
+        foo.Processes.Should().ContainSingle().Which.ProcessId.Should().Be(77);
+        foo.InstallLocation.Should().BeNull("the icon folder is an attribution hint, not a deletable location");
+    }
+
+    [Fact]
     public void Running_program_outside_the_scan_scope_becomes_a_portable_entity_without_deletable_folders()
     {
         var b = new SnapshotBuilder();
