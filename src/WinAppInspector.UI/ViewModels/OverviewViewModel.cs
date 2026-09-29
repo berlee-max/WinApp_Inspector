@@ -77,13 +77,12 @@ public sealed partial class OverviewViewModel : ObservableObject
     public void Load(IEnumerable<ApplicationItemViewModel> items)
     {
         var selectedId = SelectedItem?.Id;
-        using (View.DeferRefresh())
+        // Not inside View.DeferRefresh(): a sorted ListCollectionView throws "cannot change or check the contents ...
+        // while Refresh is deferred" as soon as the source collection changes.
+        Items.Clear();
+        foreach (var item in items)
         {
-            Items.Clear();
-            foreach (var item in items)
-            {
-                Items.Add(item);
-            }
+            Items.Add(item);
         }
 
         SelectedItem = selectedId is null ? null : Items.FirstOrDefault(i => i.Id == selectedId);

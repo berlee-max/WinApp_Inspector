@@ -194,9 +194,12 @@ public sealed class ApplicationResolver : IApplicationResolver
 
         foreach (var directory in ordered)
         {
+            // Known Windows / platform folders (Program Files\Microsoft, AppData\Local\Packages, ...) are never a vendor
+            // folder attached by name alone; they become their own system-component entity below.
+            var isPlatformFolder = _catalog.IsSystemFolder(directory.Root, directory.Path);
             var matches = drafts
                 .Select(candidate => _directories.Match(directory, candidate, snapshot))
-                .Where(m => m.Evidence.Count > 0)
+                .Where(m => m.Evidence.Count > 0 && !(isPlatformFolder && m.IsPublisherNameOnly))
                 .OrderByDescending(m => m.Score)
                 .ThenBy(m => m.Candidate.Seed) // registry and packages before directory-seeded drafts on ties
                 .ToList();

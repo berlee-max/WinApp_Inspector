@@ -246,7 +246,7 @@ public sealed partial class ScanViewModel : ObservableObject
         _allRows.Clear();
         foreach (var item in items)
         {
-            foreach (var directory in item.Entity.Directories)
+            foreach (var directory in item.Entity.Directories.Where(d => d.Role != DirectoryRole.SharedParent))
             {
                 _allRows.Add(ToRow(item, directory));
             }
