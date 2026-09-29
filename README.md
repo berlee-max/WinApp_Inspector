@@ -46,7 +46,7 @@ tests/WinAppInspector.Scanners.Tests    Windows 冒烟测试（[WindowsFact]，�
 
 不提供压缩的单文件自包含 exe：字节数一样多，却要在每次启动时解压到临时目录。
 
-要求 Windows 10 1809 及以上。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"。发布由 `.github/workflows/release.yml` 完成：推送 `v*` 标签，或在 Actions 里手动运行并填写版本号（生成预发布）。
+要求 Windows 10 1809 及以上。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"。发布由 `.github/workflows/release.yml` 完成：推送 `v*` 标签，或在 Actions 里手动运行并填写版本号。在正式版发布之前，所有版本（`v0.1.1`、`v0.2.0` 等）都是测试版，标记为预发布；只有手动运行并勾选 `stable` 才会生成正式版。
 
 ## 构建与测试
 

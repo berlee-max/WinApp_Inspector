@@ -1,7 +1,9 @@
 name: Release
 
 # Builds the win-x64 packages and attaches them to a GitHub Release.
-# Triggered by pushing a tag such as v0.1.0, or by hand with a version (a pre-release is created then).
+# Triggered by pushing a tag such as v0.1.1, or by hand with a version.
+# Every release is a pre-release (test build) unless it is run by hand with `stable` ticked:
+# the project stays in test versions (v0.1.1, v0.2.0, ...) until the owner declares a build release-quality.
 
 on:
   push:
@@ -9,9 +11,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to publish (e.g. 0.1.0-preview.1). A pre-release is created."
+        description: "Version to publish (e.g. 0.1.1 or 0.2.0)."
         required: true
         type: string
+      stable:
+        description: "Publish as a formal release instead of a pre-release. Only when the owner has declared the build release-quality."
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -42,7 +49,7 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           "numeric=$numeric" >> $env:GITHUB_OUTPUT
           "tag=v$version" >> $env:GITHUB_OUTPUT
-          "prerelease=$(if ('${{ github.event_name }}' -eq 'push' -and $version -notmatch '-') { 'false' } else { 'true' })" >> $env:GITHUB_OUTPUT
+          "prerelease=$(if ('${{ inputs.stable }}' -eq 'true' -and $version -notmatch '-') { 'false' } else { 'true' })" >> $env:GITHUB_OUTPUT
 
       - name: Restore
         run: dotnet restore WinAppInspector.sln

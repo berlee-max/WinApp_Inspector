@@ -84,6 +84,13 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 - 提交信息用 Conventional Commits（feat / fix / docs / test / chore）。
 - 提交前本地 `dotnet build` + `dotnet test` 必须通过。
 
+## 版本与发布策略
+
+- 项目处于测试期（预计一到两个月、多轮不同环境测试）。所有发布都是**测试版**，按常规语义化版本递增：修复和小调整升补丁号（`v0.1.1`），功能或界面有明显变化升次版本号（`v0.2.0`）；不再使用 `-preview.N` 后缀。
+- 测试版通过 Actions 手动运行 `release.yml` 并填写版本号发布，工作流默认标记为预发布（pre-release）。
+- **正式版只在用户明确说"可以发正式版"之后发布**：手动运行 `release.yml` 并勾选 `stable`。在此之前不要自行勾选，也不要把任何版本描述为正式版。
+- 云端会话的凭据不能推送 tag；如需打 tag，由用户在本地执行 `git tag vX.Y.Z && git push origin vX.Y.Z`。
+
 ## 已完成阶段与分支（按顺序叠加，每个分支包含前一个）
 
 | 阶段 | 分支 | 内容 |
