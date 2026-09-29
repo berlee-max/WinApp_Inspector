@@ -130,7 +130,7 @@ public sealed class UninstallManager : IUninstallManager
         return null;
     }
 
-    private static async Task<UninstallResult> RunCommandAsync(UninstallMethod method, string command, Stopwatch watch, CancellationToken cancellationToken)
+    private async Task<UninstallResult> RunCommandAsync(UninstallMethod method, string command, Stopwatch watch, CancellationToken cancellationToken)
     {
         var exe = CommandLine.ExtractExecutable(command);
         var args = CommandLine.ExtractArguments(command);
@@ -153,6 +153,7 @@ public sealed class UninstallManager : IUninstallManager
             WorkingDirectory = WindowsPath.GetDirectoryName(exe) is { } dir && Directory.Exists(dir) ? dir : string.Empty,
         };
 
+        var launchedAtUtc = DateTime.UtcNow;
         using var process = Process.Start(startInfo);
         if (process is null)
         {
@@ -164,6 +165,14 @@ public sealed class UninstallManager : IUninstallManager
         try
         {
             await process.WaitForExitAsync(linked.Token).ConfigureAwait(false);
+
+            // NSIS / Inno Setup uninstallers copy themselves to %TEMP% and exit 0 at once while the copy does the work;
+            // the residue scan must not run until that copy is gone too (§20.1 step 4, §21).
+            var detached = await DetachedUninstallerWatcher.WaitForDescendantsAsync(process.Id, launchedAtUtc, Timeout - watch.Elapsed, _logger, linked.Token).ConfigureAwait(false);
+            if (detached > 0)
+            {
+                _logger.LogInformation("Waited for {Count} detached uninstaller process(es) of {Command}", detached, command);
+            }
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
@@ -173,8 +182,8 @@ public sealed class UninstallManager : IUninstallManager
         var exitCode = process.ExitCode;
         var outcome = method == UninstallMethod.Msi ? InterpretMsiExitCode(exitCode) : exitCode == 0 ? UninstallOutcome.Succeeded : UninstallOutcome.Failed;
 
-        // Many InnoSetup / NSIS uninstallers copy themselves to %TEMP% and exit 0 immediately; the copy keeps running.
-        // The result is still reported honestly: exit code plus whatever the residue rescan finds afterwards.
+        // The exit code is the launcher's; a detached copy reports nothing back. The result stays honest: exit code plus
+        // whatever the residue rescan finds afterwards.
         return new UninstallResult(outcome, method, command, exitCode, outcome == UninstallOutcome.Failed ? $"Uninstaller exited with code {exitCode}." : null, watch.Elapsed);
     }
 

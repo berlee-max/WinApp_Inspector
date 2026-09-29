@@ -39,21 +39,29 @@
 
         <!-- Top bar -->
         <Border Grid.Row="0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1" Padding="20,0" CornerRadius="18,18,0,0">
+          <!-- Every column is sized by content except the search box, which takes what is left and shrinks first. Nothing
+               overlaps at the window's minimum width. -->
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Style="{StaticResource Manager.BackButton}" Command="{Binding BackToSummaryCommand}" HorizontalAlignment="Left">
+            <Button Grid.Column="0" Style="{StaticResource Manager.BackButton}" Command="{Binding BackToSummaryCommand}" VerticalAlignment="Center">
               <TextBlock><Run Text="‹ " FontSize="24" FontWeight="Light" Foreground="{StaticResource Brush.Accent}" /><Run Text="{StaticResource Manager.Back}" /></TextBlock>
             </Button>
-            <TextBlock Grid.Column="1" Text="{StaticResource Manager.Title}" Style="{StaticResource Text.Title}" FontSize="16" VerticalAlignment="Center" />
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-              <TextBox Style="{StaticResource Search.TextBox}" Width="190" Text="{Binding Manager.SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-              <TextBlock Text="{StaticResource Manager.SortBy}" Style="{StaticResource Text.Body}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,0,4,0" />
+            <TextBlock Grid.Column="1" Text="{StaticResource Manager.Title}" Style="{StaticResource Text.Title}" FontSize="16" VerticalAlignment="Center" Margin="18,0,0,0" />
+            <TextBox Grid.Column="2" Style="{StaticResource Search.TextBox}" MinWidth="120" MaxWidth="260" HorizontalAlignment="Right"
+                     Text="{Binding Manager.SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="16,0,0,0" />
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+              <TextBlock Text="{StaticResource Manager.SortBy}" Style="{StaticResource Text.Body}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,4,0" />
               <ComboBox Style="{StaticResource Sort.Combo}" ItemsSource="{Binding Manager.SortOptions}" SelectedItem="{Binding Manager.Sort}" DisplayMemberPath="Label" VerticalAlignment="Center" />
-              <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Manager.AnalyzeFolder}" Command="{Binding AnalyzeFolderCommand}" Margin="14,0,0,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+              <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Manager.AnalyzeFolder}" Command="{Binding AnalyzeFolderCommand}" />
               <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
               <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Settings}" Command="{Binding OpenSettingsCommand}" />
             </StackPanel>

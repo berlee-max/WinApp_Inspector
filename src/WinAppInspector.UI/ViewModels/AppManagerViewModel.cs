@@ -65,6 +65,7 @@ public sealed partial class CategoryItem : ObservableObject
 public sealed partial class AppManagerViewModel : ObservableObject
 {
     private readonly DetailViewModel _detail;
+    private readonly CategoryItem _systemCategory;
     private bool _suppressCategoryEvents;
 
     [ObservableProperty]
@@ -116,11 +117,13 @@ public sealed partial class AppManagerViewModel : ObservableObject
             new CategoryItem(CategoryKind.Running, Localize.Get("Category.Running")),
             new CategoryItem(CategoryKind.Checked, Localize.Get("Category.Checked")),
         ];
+        // Windows' own components are part of the OS, not something to manage: their category exists only when the user
+        // switches "隐藏 Windows 系统组件" off in the settings (§9.9 hidden by default).
+        _systemCategory = new CategoryItem(CategoryKind.System, Localize.Get("Category.System"));
         AdvancedCategories =
         [
             new CategoryItem(CategoryKind.SharedRuntime, Localize.Get("Category.SharedRuntime")),
             new CategoryItem(CategoryKind.Driver, Localize.Get("Category.Driver")),
-            new CategoryItem(CategoryKind.System, Localize.Get("Category.System")),
             new CategoryItem(CategoryKind.Undetermined, Localize.Get("Category.Undetermined")),
         ];
         SourceCategories =
@@ -278,7 +281,20 @@ public sealed partial class AppManagerViewModel : ObservableObject
 
     partial void OnSearchTextChanged(string value) => Refresh();
 
-    partial void OnShowSystemComponentsChanged(bool value) => Refresh();
+    partial void OnShowSystemComponentsChanged(bool value)
+    {
+        if (value && !AdvancedCategories.Contains(_systemCategory))
+        {
+            AdvancedCategories.Insert(AdvancedCategories.Count - 1, _systemCategory);
+        }
+        else if (!value && AdvancedCategories.Remove(_systemCategory) && SelectedCategory == _systemCategory)
+        {
+            SelectCategory(AppCategories[0]);
+        }
+
+        RefreshCounts();
+        Refresh();
+    }
 
     partial void OnSortChanged(SortOption value) => ApplySort();
 
@@ -353,7 +369,7 @@ public sealed partial class AppManagerViewModel : ObservableObject
         CategoryKind.Checked => item.IsChecked,
         CategoryKind.SharedRuntime => item.AppType == AppType.SharedRuntime,
         CategoryKind.Driver => item.AppType == AppType.HardwareOrDriver,
-        CategoryKind.System => item.AppType == AppType.SystemComponent,
+        CategoryKind.System => ShowSystemComponents && item.AppType == AppType.SystemComponent,
         CategoryKind.Undetermined => item.AppType == AppType.Undetermined,
         CategoryKind.Store => item.Source == SourceKind.Store && IsListed(item),
         CategoryKind.Msi => item.Source == SourceKind.Msi && IsListed(item),

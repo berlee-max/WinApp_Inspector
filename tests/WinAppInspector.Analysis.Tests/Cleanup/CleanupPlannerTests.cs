@@ -121,6 +121,21 @@ public class CleanupPlannerTests
     }
 
     [Fact]
+    public void Undetermined_entries_reach_the_checklist_unblocked_but_need_the_attribution_acknowledgement()
+    {
+        var dir = Dir($@"{Folders.LocalAppData}\img2text");
+        var app = App(AppType.Undetermined, directories: dir) with { DetectionConfidence = ConfidenceLevel.Unknown };
+
+        var items = _planner.Build(app, Report([dir]), afterUninstall: false);
+
+        items.Should().ContainSingle().Which.Blocked.Should().BeNull("the checklist itself carries the warning and the confirmation");
+        _planner.Validate(new CleanupPlan { Application = app, Items = items, UserConfirmed = true })
+            .Should().ContainSingle().Which.Should().Be(nameof(DeletionBlockerKind.UndeterminedAttribution));
+        _planner.Validate(new CleanupPlan { Application = app, Items = items, UserConfirmed = true, AttributionAcknowledged = true })
+            .Should().BeEmpty();
+    }
+
+    [Fact]
     public void Validate_requires_confirmation_and_permanent_deletion_acknowledgement()
     {
         var dir = Dir($@"{Folders.LocalAppData}\Foo");

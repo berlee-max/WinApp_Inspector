@@ -60,6 +60,36 @@ public class DeletionGuardTests
         verdict.CanShowSafeToDeleteLabel.Should().BeFalse("§9.10");
     }
 
+    [Fact]
+    public void Acknowledged_attribution_lifts_only_the_attribution_blockers()
+    {
+        var app = Residue(b =>
+        {
+            b.AppType = AppType.Undetermined;
+            b.Confidence = ConfidenceLevel.Unknown;
+        });
+
+        var verdict = _guard.Evaluate(new DeletionRequest
+        {
+            Application = app,
+            TargetPaths = [AppDir],
+            UserConfirmed = true,
+            AttributionAcknowledged = true,
+        });
+
+        verdict.IsAllowed.Should().BeTrue();
+        verdict.CanShowSafeToDeleteLabel.Should().BeFalse("§9.10 forbids the label even when the user takes responsibility");
+
+        var protectedTarget = _guard.Evaluate(new DeletionRequest
+        {
+            Application = app,
+            TargetPaths = [@"C:\Windows\System32"],
+            UserConfirmed = true,
+            AttributionAcknowledged = true,
+        });
+        protectedTarget.Blockers.Should().Contain(b => b.Kind == DeletionBlockerKind.ProtectedPath, "acknowledgement never reaches the path rules");
+    }
+
     [Theory]
     [InlineData(AppType.SystemComponent)]
     [InlineData(AppType.HardwareOrDriver)]

@@ -62,6 +62,7 @@ public static class AppxPackageJsonParser
             NonRemovable = GetBool(element, "NonRemovable"),
             IsBundle = GetBool(element, "IsBundle") ?? false,
             SignatureKind = GetSignatureKind(element),
+            AppUserModelId = GetString(element, "AppUserModelId"),
         };
     }
 

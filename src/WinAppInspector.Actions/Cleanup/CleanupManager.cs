@@ -102,6 +102,7 @@ public sealed class CleanupManager : ICleanupManager
             TargetPaths = [path],
             UserConfirmed = plan.UserConfirmed,
             ServicesHandled = true,
+            AttributionAcknowledged = plan.AttributionAcknowledged,
         });
         if (verdict.HardBlockers.Count > 0)
         {

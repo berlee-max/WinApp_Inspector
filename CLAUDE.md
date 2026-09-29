@@ -57,7 +57,7 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 - 优先调用官方卸载：UninstallString → QuietUninstallString → MSI → AppX → 自带 uninstall.exe。
 - 禁止删除 `C:\Windows`、`System32`、`SysWOW64`、`WinSxS`、`Windows\Installer`、`Program Files\WindowsApps`。
 - 系统组件、驱动 / 硬件组件、共享运行库默认"保留"，不提供直接删除入口。
-- "待判断"类型永远不显示"可安全删除"。
+- "待判断"类型永远不显示"可安全删除"。用户要求它们可以手动移除：只能走 §22 逐项清单，清单顶部显示归属警告，`DeletionRequest.AttributionAcknowledged` / `CleanupPlan.AttributionAcknowledged` 只解除归属类阻断（`UndeterminedAttribution`、`LowConfidence`），路径保护等其他规则照旧。
 - 文件删除默认进回收站；无法进回收站的目录必须明示"此操作将永久删除"。
 - 这些规则在 Core 中实现为可测试的规则类（如 `ProtectedPathRule`、`DeletionGuard`），并配单元测试。
 
@@ -107,6 +107,7 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 | 8 | `feature/orphan-processes-custom-roots` | 未归属运行项列表、自定义扫描目录 |
 | 9 | `feature/app-manager-ui` | 第二版界面：扫描首页 + 应用程序管理器；扫描范围外的运行程序成为独立条目 |
 | 10 | `fix/startup-crash-launcher` | 修复启动即崩溃（字符串与样式重名）；崩溃日志与错误框；`--self-test` 在 CI 真机启动；便携版改为启动器 + `app\` + `runtime\`；应用图标 |
+| 11 | `feature/feedback-round-2` | 第二轮真机反馈：等待 NSIS / Inno 卸载器的分离副本再扫残留；真实应用图标（shell:AppsFolder / DisplayIcon）；商店应用体积显示"—"；系统组件分类默认隐藏；顶栏窄窗口布局；待判断项可经确认后手动移除；关于窗口显示真实版本 |
 
 ## 验证状态（请如实更新）
 
@@ -115,4 +116,6 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 - 首次 Windows 运行暴露并已修复的问题（都在 Linux 无法执行的代码里）：签名者取的是证书 CN（".NET"）而不是 O（"Microsoft Corporation"）；根目录计划任务的 `TaskPath` 为空；`SHFILEOPSTRUCT` 用了 `Pack=1`（32 位布局），x64 上 `SHFileOperationW` 直接 AccessViolation。
 - 用户首次在 Windows 上运行 v0.1.0-preview.2：便携版与精简版双击都没有任何反应。根因是 `Manager.Back` 同时是字符串键和样式键，主窗口构造时 XamlParseException，进程在窗口出现前退出且没有任何提示。已修复，并加了崩溃日志、`--self-test` 和 CI 真机启动。
 - 在 Windows 上（CI）：`--self-test` 会启动 WPF 界面并渲染首页 / 扫描中 / 摘要 / 管理器四个页面（验证 XAML 与 DI 能加载），发布流程对便携版（经启动器）和精简版各跑一次。
-- 仍未在 Windows 上验证：界面的实际布局效果与数据绑定（关注输出窗口的 System.Windows.Data Error）、对真实软件的卸载与残留清理、资源管理器右键菜单注册与 `--analyze` 启动参数、系统还原点创建。
+- 用户在 Windows 上用 v0.1.1 完成了一次真实卸载（NSIS 安装的 AI Agent SDX）：残留清单在卸载程序还在运行时就弹出来了，因为 NSIS 卸载器把自己复制到 %TEMP% 后立刻退出。已改为用 WMI 跟踪卸载器的子进程树（`DetachedUninstallerWatcher`），并在 CI 上用 cmd → start /b → timeout 模拟验证。
+- 同一轮反馈还暴露：所有应用都显示首字母而不是图标（原来只用 ExtractAssociatedIcon 读主程序）；商店应用体积永远"计算中…"（WindowsApps 不可读，没有目录可量）；"系统组件"分类把 96 个 SystemApps 都列出来；窄窗口时顶栏重叠；待判断项无法勾选；关于窗口版本号写死。均已处理，图标与顶栏效果尚待用户在 Windows 上确认。
+- 仍未在 Windows 上验证：新图标加载（shell:AppsFolder 平铺图、DisplayIcon 索引）的实际效果、顶栏在 960 px 窗口下的布局、对真实软件卸载后残留清理的完整流程、资源管理器右键菜单注册与 `--analyze` 启动参数、系统还原点创建。

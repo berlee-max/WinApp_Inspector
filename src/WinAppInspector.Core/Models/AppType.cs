@@ -56,13 +56,19 @@ public static class AppTypeExtensions
     public static bool AllowsSafeToDeleteLabel(this AppType type) =>
         type != AppType.Undetermined && !type.IsProtectedByDefault();
 
-    /// <summary>§22: manual removal only applies to portable apps, clear residue and user-level apps without an uninstaller.</summary>
+    /// <summary>
+    /// §22: manual removal applies to portable apps, clear residue and user-level apps without an uninstaller. Undetermined
+    /// folders are included as well, at the owner's request: they go through the same per-item checklist, but only after the
+    /// user acknowledges that attribution is unknown (<c>DeletionRequest.AttributionAcknowledged</c>), and they are never
+    /// labelled "safe to delete" (§9.10).
+    /// </summary>
     public static bool IsEligibleForManualRemoval(this AppType type) => type switch
     {
         AppType.Portable => true,
         AppType.SuspectedResidue => true,
         AppType.UserLevel => true,
         AppType.AppCache => true,
+        AppType.Undetermined => true,
         _ => false,
     };
 

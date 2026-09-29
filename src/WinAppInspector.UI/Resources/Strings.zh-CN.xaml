@@ -5,7 +5,7 @@
   <!-- All user-facing text lives here (Simplified Chinese). Keys are English identifiers. -->
 
   <sys:String x:Key="App.Title">WinApp Inspector</sys:String>
-  <sys:String x:Key="App.Version">版本 0.1.0（预览）</sys:String>
+  <sys:String x:Key="App.VersionFormat">版本 {0}（测试版）</sys:String>
   <sys:String x:Key="App.AboutText">WinApp Inspector 不是"垃圾清理工具"，而是一款帮助用户看清 Windows 电脑里"到底装了什么、这些文件属于谁、应该怎么卸载"的程序发现与卸载分析工具。所有删除操作都必须先展示证据、由您确认后才会执行。</sys:String>
 
   <!-- §12 navigation -->
@@ -145,6 +145,7 @@
   <sys:String x:Key="Cleanup.PermanentWarning">所选项目中包含无法进入回收站的内容（注册表、服务、计划任务，或您关闭了回收站）。此操作将永久删除。</sys:String>
   <sys:String x:Key="Cleanup.AcknowledgePermanent">我了解上述项目将被永久删除，无法恢复</sys:String>
   <sys:String x:Key="Cleanup.Confirm">我已确认以上所选项目属于该软件，同意移除</sys:String>
+  <sys:String x:Key="Cleanup.UndeterminedWarning">该项目的归属无法判断：本工具不能证明这些文件不属于其他程序，也不会把它们标记为"可安全删除"。请先自行核实，再决定是否移除；文件默认进回收站，可以找回。</sys:String>
   <sys:String x:Key="Cleanup.SelectedFormat">已选择 {0} 项</sys:String>
   <sys:String x:Key="Cleanup.Execute">移除所选</sys:String>
   <sys:String x:Key="Cleanup.Executing">正在移除…</sys:String>
@@ -217,7 +218,7 @@
   <sys:String x:Key="Detail.Empty">在列表中选择一个软件查看详情</sys:String>
   <sys:String x:Key="Detail.Recommendation">建议</sys:String>
   <sys:String x:Key="Recommend.Keep">系统组件、驱动或共享运行库，默认保留，不提供直接删除入口。</sys:String>
-  <sys:String x:Key="Recommend.Undetermined">归属尚无法判断，不会显示"可安全删除"。请先确认它属于哪个程序。</sys:String>
+  <sys:String x:Key="Recommend.Undetermined">归属尚无法判断，不会显示"可安全删除"。如果您自己核实过这些文件不属于其他程序，可以手动移除：逐项勾选，默认进回收站。</sys:String>
   <sys:String x:Key="Recommend.OfficialUninstaller">存在官方卸载程序，卸载时请使用它；卸载完成后可重新扫描以识别残留。</sys:String>
   <sys:String x:Key="Recommend.Residue">疑似卸载残留。可以考虑在确认后清理，删除范围仅限所列目录。</sys:String>
   <sys:String x:Key="Recommend.NoUninstaller">未发现标准卸载入口。建议首先检查程序自身设置或卸载程序；确认后才可手动移除。</sys:String>
@@ -307,7 +308,7 @@
   <sys:String x:Key="Protection.ScanRoot">已在默认扫描范围内</sys:String>
   <sys:String x:Key="Settings.RecycleBin">删除文件优先进入回收站</sys:String>
   <sys:String x:Key="Settings.RestorePoint">卸载前创建系统还原点</sys:String>
-  <sys:String x:Key="Settings.HideSystem">隐藏系统组件</sys:String>
+  <sys:String x:Key="Settings.HideSystem">隐藏 Windows 系统组件（系统自身的一部分，本工具不卸载）</sys:String>
   <sys:String x:Key="Settings.ReadSignatures">扫描数字签名</sys:String>
   <sys:String x:Key="Settings.ScanTasks">扫描计划任务</sys:String>
   <sys:String x:Key="Settings.ScanServices">扫描服务</sys:String>
@@ -410,6 +411,7 @@
   <sys:String x:Key="Value.No">无</sys:String>
   <sys:String x:Key="Size.Unknown">未知</sys:String>
   <sys:String x:Key="Size.Pending">计算中…</sys:String>
+  <sys:String x:Key="Size.Unavailable">—</sys:String>
   <sys:String x:Key="Size.RegistryEstimate">（注册表估算）</sys:String>
   <sys:String x:Key="About.Close">关闭</sys:String>
   <sys:String x:Key="Placeholder.Boundary">发现程序 → 识别程序 → 解释依据 → 查看详情 → 调用官方卸载 → 识别明确残留 → 用户确认后清理</sys:String>
