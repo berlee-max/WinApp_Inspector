@@ -26,6 +26,9 @@ public sealed class AppSettings
     public bool ScanScheduledTasks { get; set; } = true;
     public bool ScanServices { get; set; } = true;
 
+    /// <summary>§19: Explorer context menu registered for the current user.</summary>
+    public bool ExplorerContextMenu { get; set; }
+
     public ScanOptions ToScanOptions()
     {
         var roots = new HashSet<ScanRoot>();

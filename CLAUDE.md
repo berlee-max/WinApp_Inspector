@@ -81,3 +81,21 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 - 每个阶段一个功能分支（如 `feature/scaffold`），开 PR 到 `main`；PR 描述写清楚做了什么、如何验证。
 - 提交信息用 Conventional Commits（feat / fix / docs / test / chore）。
 - 提交前本地 `dotnet build` + `dotnet test` 必须通过。
+
+## 已完成阶段与分支（按顺序叠加，每个分支包含前一个）
+
+| 阶段 | 分支 | 内容 |
+|---|---|---|
+| 1 | `main-l05rvm` | 脚手架、Core 模型、ProtectedPathRule / DeletionGuard、CI |
+| 2 | `feature/scan-engine` | 全部扫描器 + Core 解析器 + Windows 冒烟测试 |
+| 3 | `feature/attribution` | ApplicationResolver、匹配器、分类器、残留判断 |
+| 4 | `feature/ui` | WPF 三页面 + 详情面板 + 设置 + 搜索 |
+| 5 | `feature/uninstall-cleanup` | 官方卸载、残留扫描、手动清理、操作日志 |
+| 6 | `feature/export-cache-shell` | 导出报告、扫描缓存、资源管理器右键菜单 |
+
+## 验证状态（请如实更新）
+
+- 在 Linux 上：`dotnet build` 全部通过（0 警告），Core / Analysis 单元测试全部通过。
+- 在 Windows 上（CI windows-latest，Windows Server 2025）：`tests/WinAppInspector.Scanners.Tests` 中的 `[WindowsFact]` 冒烟测试在每个 PR 上真实执行并全部通过，覆盖注册表 / AppX（PackageManager 与 PowerShell）/ 目录 / 进程 / 服务 / 启动项 / 计划任务扫描器、WinVerifyTrust 签名读取、操作日志、注册表探测、临时目录的回收站删除、Startup 文件夹清理和卸载管理器的拒绝路径。
+- 首次 Windows 运行暴露并已修复的问题（都在 Linux 无法执行的代码里）：签名者取的是证书 CN（".NET"）而不是 O（"Microsoft Corporation"）；根目录计划任务的 `TaskPath` 为空；`SHFILEOPSTRUCT` 用了 `Pack=1`（32 位布局），x64 上 `SHFileOperationW` 直接 AccessViolation。
+- 仍未在 Windows 上验证：WPF 界面的运行时绑定与布局（只验证过编译；关注输出窗口的 System.Windows.Data Error）、对真实软件的卸载与残留清理、资源管理器右键菜单注册与 `--analyze` 启动参数、系统还原点创建。

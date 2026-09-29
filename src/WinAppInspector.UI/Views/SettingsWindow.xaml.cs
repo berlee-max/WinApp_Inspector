@@ -9,6 +9,14 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
-        viewModel.CloseRequested += (_, _) => Close();
+        viewModel.CloseRequested += (_, _) =>
+        {
+            if (viewModel.ShellError is { } error)
+            {
+                MessageBox.Show(this, Localization.Localize.Get("Shell.RegisterFailed") + Environment.NewLine + error, Localization.Localize.Get("Settings.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            Close();
+        };
     }
 }

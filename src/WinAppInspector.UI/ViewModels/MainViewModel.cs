@@ -2,6 +2,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using WinAppInspector.Analysis.Export;
 using WinAppInspector.Core.Models;
 using WinAppInspector.Core.Scanning;
 using WinAppInspector.UI.Localization;
@@ -23,7 +24,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly IScanService _scanService;
     private readonly IconService _icons;
     private readonly SettingsService _settings;
+    private readonly ScanCache _cache;
+    private readonly IDialogService _dialogs;
     private readonly ILogger<MainViewModel> _logger;
+    private string? _pendingAnalyzePath;
+    private DateTimeOffset? _lastScanTime;
     private CancellationTokenSource? _scanCts;
     private CancellationTokenSource? _sizeCts;
     private ScanSnapshot? _lastSnapshot;
@@ -51,6 +56,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         IScanService scanService,
         IconService icons,
         SettingsService settings,
+        ScanCache cache,
+        IDialogService dialogs,
         OverviewViewModel overview,
         ScanViewModel scan,
         UninstallViewModel uninstall,
@@ -60,6 +67,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _scanService = scanService;
         _icons = icons;
         _settings = settings;
+        _cache = cache;
+        _dialogs = dialogs;
         Overview = overview;
         Scan = scan;
         Uninstall = uninstall;
@@ -114,6 +123,86 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public event EventHandler? AboutRequested;
 
+    /// <summary>§19: a path handed over by the Explorer context menu; analysed once the first scan has finished.</summary>
+    public void RequestAnalyzeOnStartup(string path) => _pendingAnalyzePath = path;
+
+    /// <summary>§31/§33: show the previous results immediately while the fresh scan runs.</summary>
+    public async Task LoadCacheAsync()
+    {
+        var cached = await _cache.LoadAsync(CancellationToken.None);
+        if (cached is null || cached.Applications.Count == 0 || _itemsById.Count > 0)
+        {
+            return;
+        }
+
+        LoadResults(cached.Applications, []);
+        _lastScanTime = cached.ScanTime;
+        LastScanText = Localize.Format("Status.CachedScanFormat", cached.ScanTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [RelayCommand]
+    private void ExportReport()
+    {
+        if (_itemsById.Count == 0)
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = Localize.Get("Export.Title"),
+            FileName = "WinAppInspector-" + DateTime.Now.ToString("yyyyMMdd-HHmm", System.Globalization.CultureInfo.InvariantCulture),
+            Filter = Localize.Get("Export.Filter"),
+            DefaultExt = ".csv",
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var format = System.IO.Path.GetExtension(dialog.FileName).ToUpperInvariant() switch
+        {
+            ".JSON" => ReportFormat.Json,
+            ".HTML" or ".HTM" => ReportFormat.Html,
+            _ => ReportFormat.Csv,
+        };
+
+        var labels = new ReportLabels
+        {
+            Title = Localize.Get("Export.ReportTitle"),
+            Name = Localize.Get("Column.Name"),
+            Version = Localize.Get("Column.Version"),
+            Publisher = Localize.Get("Column.Publisher"),
+            Type = Localize.Get("Column.Type"),
+            InstallLocation = Localize.Get("Column.InstallLocation"),
+            Status = Localize.Get("Column.Status"),
+            IsRunning = Localize.Get("Column.Running"),
+            UninstallMethod = Localize.Get("Column.UninstallMethod"),
+            DiskUsage = Localize.Get("Column.DiskUsage"),
+            Yes = Localize.Get("Value.Yes"),
+            No = Localize.Get("Value.No"),
+            ScanTime = Localize.Get("Export.ScanTime"),
+            GeneratedBy = Localize.Get("Export.GeneratedBy"),
+            TypeText = Localize.AppType,
+            UninstallMethodText = Localize.UninstallMethod,
+            StatusText = a => new ApplicationItemViewModel(a, _icons).StatusText,
+            SizeText = b => b is null ? string.Empty : Localize.Bytes(b),
+        };
+
+        try
+        {
+            // Export what the user sees: the current filter and search, sorted as displayed.
+            var visible = Overview.View.Cast<ApplicationItemViewModel>().Select(i => i.Entity).ToList();
+            var content = ReportExporter.Export(visible, format, labels, _lastScanTime ?? DateTimeOffset.Now);
+            System.IO.File.WriteAllText(dialog.FileName, content, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            StatusText = Localize.Format("Export.DoneFormat", visible.Count, dialog.FileName);
+        }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        {
+            _dialogs.Warn(Localize.Get("Export.Title"), Localize.Format("Export.FailedFormat", dialog.FileName), ex.Message);
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanRescan))]
     private async Task RescanAsync()
     {
@@ -138,10 +227,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             var outcome = await _scanService.ScanAsync(progress, _scanCts.Token);
             _lastSnapshot = outcome.Snapshot;
+            _lastScanTime = outcome.Snapshot.ScanTime;
             LoadResults(outcome.Resolution.Applications, outcome.Snapshot.Errors);
             LastScanText = Localize.Format("Status.LastScanFormat", outcome.Snapshot.ScanTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture));
             StatusText = Localize.Format("Status.ScanDoneFormat", outcome.Resolution.Applications.Count, outcome.Snapshot.Errors.Count);
             _ = ComputeSizesAsync(outcome.Resolution.Applications);
+
+            if (_pendingAnalyzePath is { } pending)
+            {
+                _pendingAnalyzePath = null;
+                CurrentPage = MainPage.Scan;
+                await AnalyzeFolderAsync(System.IO.File.Exists(pending) ? System.IO.Path.GetDirectoryName(pending) ?? pending : pending);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -206,11 +303,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             await _scanService.ComputeSizesAsync(applications, OnSize, progress, token);
-            Application.Current.Dispatcher.Invoke(() =>
+            await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 Scan.MarkSizesDone();
                 Overview.RefreshStats();
             });
+            var withSizes = Application.Current.Dispatcher.Invoke(() => _itemsById.Values.Select(i => i.Entity).ToList());
+            await _cache.SaveAsync(new CachedScan(_lastScanTime ?? DateTimeOffset.Now, withSizes), CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
