@@ -22,6 +22,9 @@ Write-Host "Launching $Path --self-test"
 $process = Start-Process -FilePath $Path -ArgumentList '--self-test' -PassThru
 $exited = $process.WaitForExit($TimeoutSeconds * 1000)
 if (-not $exited) {
+    # A stuck process usually sits in a modal box (for example the apphost's "install .NET" dialog): list what is open.
+    Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object { "open window: [$($_.ProcessName)] $($_.MainWindowTitle)" }
+    Get-Process -Name WinAppInspector -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill($true) }
     $process.Kill($true)
     Write-Host "::error::Self-test did not finish within $TimeoutSeconds s (no window, or the window never rendered)."
     $failed = $true
