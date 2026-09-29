@@ -372,9 +372,9 @@
   <!-- ===================================================================================================== -->
   <!-- Hero page (home / scanning / summary): deep blue gradient, white type, glass cards, one round action. -->
   <LinearGradientBrush x:Key="Hero.Background" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="#1E3A8A" Offset="0" />
-    <GradientStop Color="#1D4ED8" Offset="0.45" />
-    <GradientStop Color="#4C1D95" Offset="1" />
+    <GradientStop Color="#082E70" Offset="0" />
+    <GradientStop Color="#0A5FC8" Offset="0.49" />
+    <GradientStop Color="#402198" Offset="1" />
   </LinearGradientBrush>
   <SolidColorBrush x:Key="Hero.Text" Color="#FFFFFF" />
   <SolidColorBrush x:Key="Hero.TextSoft" Color="#CBD5F5" />
@@ -576,9 +576,9 @@
   <!-- ===================================================================================================== -->
   <!-- App manager: sidebar entries with counts, rows with tick boxes, fallback icon tiles. -->
   <Style x:Key="Sidebar.Header" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
-    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontSize" Value="20" />
     <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Margin" Value="12,0,12,4" />
+    <Setter Property="Margin" Value="12,0,12,6" />
   </Style>
   <Style x:Key="Sidebar.Count" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
     <Setter Property="FontSize" Value="13" />
@@ -588,8 +588,9 @@
   <Style x:Key="Sidebar.Item" TargetType="RadioButton">
     <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
     <Setter Property="FontSize" Value="14" />
-    <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}" />
-    <Setter Property="Height" Value="36" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="#696E76" />
+    <Setter Property="Height" Value="38" />
     <Setter Property="Margin" Value="0,1" />
     <Setter Property="Padding" Value="12,0" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -597,8 +598,15 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="RadioButton">
-          <Border x:Name="Root" CornerRadius="8" Background="Transparent" Padding="{TemplateBinding Padding}">
-            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+          <Border x:Name="Root" CornerRadius="10" Background="Transparent" Padding="{TemplateBinding Padding}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Rectangle x:Name="Bar" Grid.Column="0" Width="3" Height="18" RadiusX="2" RadiusY="2" Fill="{StaticResource Brush.Accent}" Margin="0,0,9,0" Visibility="Collapsed" />
+              <ContentPresenter Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+            </Grid>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -606,7 +614,8 @@
             </Trigger>
             <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="Root" Property="Background" Value="{StaticResource Brush.RowSelected}" />
-              <Setter Property="FontWeight" Value="SemiBold" />
+              <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+              <Setter Property="Foreground" Value="#0D2D5B" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -675,6 +684,118 @@
     <Setter Property="FontSize" Value="13" />
     <Setter Property="MinWidth" Value="110" />
     <Setter Property="Padding" Value="8,4" />
+  </Style>
+
+  <!-- Hero additions: icon bullets drawn as paths, chips, card tiles, primary card button -->
+  <Style x:Key="Hero.BulletIcon" TargetType="Path">
+    <Setter Property="Stroke" Value="White" />
+    <Setter Property="StrokeThickness" Value="1.8" />
+    <Setter Property="StrokeLineJoin" Value="Round" />
+    <Setter Property="StrokeStartLineCap" Value="Round" />
+    <Setter Property="StrokeEndLineCap" Value="Round" />
+    <Setter Property="Width" Value="21" />
+    <Setter Property="Height" Value="21" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Hero.Chip" TargetType="Border">
+    <Setter Property="Background" Value="#12FFFFFF" />
+    <Setter Property="BorderBrush" Value="#14FFFFFF" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Margin" Value="9,0" />
+  </Style>
+  <Style x:Key="Hero.ChipText" TargetType="TextBlock" BasedOn="{StaticResource Hero.Caption}">
+    <Setter Property="Foreground" Value="#94FFFFFF" />
+  </Style>
+  <Style x:Key="Hero.BigTile" TargetType="Border">
+    <Setter Property="Width" Value="88" />
+    <Setter Property="Height" Value="88" />
+    <Setter Property="CornerRadius" Value="24" />
+    <Setter Property="Background" Value="{StaticResource Hero.RoundFill}" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#001343" BlurRadius="26" ShadowDepth="14" Opacity="0.3" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.CornerTile" TargetType="Border">
+    <Setter Property="Width" Value="52" />
+    <Setter Property="Height" Value="52" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Background" Value="{StaticResource Hero.RoundFill}" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#002062" BlurRadius="24" ShadowDepth="10" Opacity="0.28" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Hero.CornerTileText" TargetType="TextBlock">
+    <Setter Property="Foreground" Value="{StaticResource Hero.Text}" />
+    <Setter Property="FontSize" Value="24" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style x:Key="Hero.CardButtonPrimary" TargetType="Button" BasedOn="{StaticResource Hero.CardButton}">
+    <Setter Property="Background" Value="#FFFFFF" />
+    <Setter Property="Foreground" Value="#15346B" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <!-- Manager shell inside the dark page -->
+  <Style x:Key="Manager.Shell" TargetType="Border">
+    <Setter Property="Margin" Value="7" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#00103C" BlurRadius="60" ShadowDepth="24" Opacity="0.4" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="Manager.Back" TargetType="Button" BasedOn="{StaticResource Link.Button}">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}" />
+  </Style>
+  <Style x:Key="Manager.Bottom" TargetType="Border">
+    <Setter Property="Background" Value="#F5F8F9FC" />
+    <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="24,0" />
+    <Setter Property="CornerRadius" Value="0,0,18,18" />
+  </Style>
+  <Style x:Key="Sidebar.Desc" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="19" />
+    <Setter Property="Margin" Value="12,0,12,14" />
+  </Style>
+  <Style x:Key="Sidebar.SubHeader" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="12,18,12,6" />
+  </Style>
+  <Style x:Key="App.IconTile" TargetType="Border">
+    <Setter Property="Width" Value="42" />
+    <Setter Property="Height" Value="42" />
+    <Setter Property="CornerRadius" Value="11" />
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="#223861" BlurRadius="13" ShadowDepth="5" Opacity="0.15" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="App.IconTileText" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
 
 </ResourceDictionary>

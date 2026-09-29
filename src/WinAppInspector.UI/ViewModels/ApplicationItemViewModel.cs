@@ -7,14 +7,13 @@ using WinAppInspector.UI.Services;
 
 namespace WinAppInspector.UI.ViewModels;
 
-/// <summary>Where the application came from, as the user thinks of it: the Store, an installer, or a folder.</summary>
+/// <summary>How the application was installed, as the user thinks of it: the Store, an MSI package, an EXE installer, or none of these.</summary>
 public enum SourceKind
 {
     Store = 0,
-    Installed = 1,
-    Portable = 2,
-    Residue = 3,
-    Other = 4,
+    Msi = 1,
+    Exe = 2,
+    Other = 3,
 }
 
 /// <summary>Row model for an <see cref="ApplicationEntity"/>. The entity is replaced when sizes or scans update it.</summary>
@@ -87,15 +86,11 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
     public bool IsActionable => !IsProtected && !IsAdHoc && (HasOfficialUninstaller || CanRemoveManually);
 
     public SourceKind Source => Entity.Packages.Count > 0 ? SourceKind.Store
-        : Entity.RegistryEntries.Count > 0 ? SourceKind.Installed
-        : Entity.AppType == AppType.SuspectedResidue ? SourceKind.Residue
-        : Entity.AppType is AppType.Portable or AppType.UserLevel ? SourceKind.Portable
-        : SourceKind.Other;
+        : Entity.RegistryEntries.Count == 0 ? SourceKind.Other
+        : Entity.MsiProductCode is not null || Entity.PreferredUninstallMethod == UninstallMethod.Msi ? SourceKind.Msi
+        : SourceKind.Exe;
 
     public string SourceText => Localize.Get("Source." + Source);
-
-    /// <summary>Publisher group for the sidebar: Microsoft is one group, every other publisher its own.</summary>
-    public string VendorKey => Entity.IsMicrosoft ? "Microsoft" : Entity.Publisher is { Length: > 0 } p ? p : Localize.Get("Value.Unknown");
 
     /// <summary>
     /// A portable program that was discovered only because its folder is under a default scan root, is not running and is
@@ -126,10 +121,10 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
         _ => "Normal",
     };
 
-    /// <summary>One-line secondary text under the name: publisher, and the status when it is not simply "normal".</summary>
+    /// <summary>One-line secondary text under the name: publisher · type, plus the status when it matters.</summary>
     public string SubtitleText => Entity.IsRunning || Entity.AppType is AppType.SuspectedResidue or AppType.Undetermined
-        ? $"{Publisher} · {StatusText}"
-        : Publisher;
+        ? $"{Publisher} · {TypeText} · {StatusText}"
+        : $"{Publisher} · {TypeText}";
 
     public ImageSource? Icon
     {
@@ -147,6 +142,36 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
 
     /// <summary>First letter shown when no icon can be extracted.</summary>
     public string Initial => Entity.Name.Length > 0 ? Entity.Name[..1].ToUpperInvariant() : "?";
+
+    private static readonly (Color From, Color To)[] TilePalette =
+    [
+        (Color.FromRgb(0x13, 0xBC, 0xD9), Color.FromRgb(0x0B, 0x68, 0xD1)),
+        (Color.FromRgb(0x33, 0xA9, 0xEF), Color.FromRgb(0x04, 0x7D, 0xCC)),
+        (Color.FromRgb(0x16, 0xBF, 0x62), Color.FromRgb(0x0B, 0x9B, 0x4B)),
+        (Color.FromRgb(0xF0, 0x50, 0x33), Color.FromRgb(0xC9, 0x35, 0x20)),
+        (Color.FromRgb(0x7C, 0x5C, 0xE8), Color.FromRgb(0x4C, 0x2F, 0xB5)),
+        (Color.FromRgb(0xF2, 0x9A, 0x1F), Color.FromRgb(0xD1, 0x6B, 0x0B)),
+        (Color.FromRgb(0x44, 0x4C, 0x5A), Color.FromRgb(0x25, 0x2A, 0x33)),
+        (Color.FromRgb(0xE0, 0x4E, 0x8C), Color.FromRgb(0xAF, 0x2A, 0x6A)),
+    ];
+
+    /// <summary>A stable gradient for the fallback tile, chosen from the name so the same app always gets the same colour.</summary>
+    public Brush IconBrush
+    {
+        get
+        {
+            var hash = 0;
+            foreach (var c in Entity.Name)
+            {
+                hash = unchecked(hash * 31 + c);
+            }
+
+            var (from, to) = TilePalette[Math.Abs(hash) % TilePalette.Length];
+            var brush = new LinearGradientBrush(from, to, 45);
+            brush.Freeze();
+            return brush;
+        }
+    }
 
     public bool HasIcon => Icon is not null;
 

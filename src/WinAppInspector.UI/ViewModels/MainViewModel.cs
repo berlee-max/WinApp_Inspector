@@ -45,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(StartScanCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelScanCommand))]
     [NotifyCanExecuteChangedFor(nameof(OpenManagerCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveResidueCommand))]
     [NotifyCanExecuteChangedFor(nameof(UninstallCheckedCommand))]
     [NotifyCanExecuteChangedFor(nameof(UninstallCurrentCommand))]
     private ShellStage _stage = ShellStage.Home;
@@ -55,6 +56,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _scanDetailText = string.Empty;
+
+    [ObservableProperty]
+    private string _scanCountText = string.Empty;
 
     [ObservableProperty]
     private double _progressValue;
@@ -198,19 +202,24 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanOpenManager))]
     private void OpenManager(string? category)
     {
-        if (category is not null && Enum.TryParse<CategoryKind>(category, out var kind))
+        if (category is not null && Enum.TryParse<CategoryKind>(category, out var kind) && Manager.Find(kind) is { } target)
         {
-            var target = Manager.PrimaryCategories.Concat(Manager.SourceCategories).FirstOrDefault(c => c.Kind == kind);
-            if (target is not null)
-            {
-                Manager.SelectCategoryCommand.Execute(target);
-            }
+            Manager.SelectCategoryCommand.Execute(target);
         }
 
         Stage = ShellStage.Manager;
     }
 
     private bool CanOpenManager() => HasResults && Stage != ShellStage.Scanning;
+
+    /// <summary>The summary card's "移除": opens the residue list with every removable item ticked. Nothing is deleted here;
+    /// the bottom-bar action still runs the per-item checklist for each application (§22).</summary>
+    [RelayCommand(CanExecute = nameof(CanOpenManager))]
+    private void RemoveResidue()
+    {
+        Manager.CheckAll(CategoryKind.Residue);
+        OpenManager(nameof(CategoryKind.Residue));
+    }
 
     [RelayCommand]
     private void BackToSummary()
@@ -370,6 +379,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         ScanDetailText = string.Empty;
         StatusText = string.Empty;
 
+        ScanCountText = string.Empty;
         var progress = new Progress<ScanProgress>(p =>
         {
             ScanStageText = Localize.Stage(p.Stage);
@@ -378,10 +388,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 ProgressIndeterminate = false;
                 ProgressValue = 100.0 * done / total;
+                ScanCountText = Localize.Format("Scanning.CountFormat", done, total);
             }
             else
             {
                 ProgressIndeterminate = true;
+                ScanCountText = string.Empty;
             }
         });
 
@@ -423,6 +435,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
 
             OpenManagerCommand.NotifyCanExecuteChanged();
+            RemoveResidueCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -448,6 +461,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         RefreshSummary();
         OnPropertyChanged(nameof(HasResults));
         OpenManagerCommand.NotifyCanExecuteChanged();
+        RemoveResidueCommand.NotifyCanExecuteChanged();
     }
 
     private void RefreshSummary()

@@ -13,15 +13,21 @@ namespace WinAppInspector.UI.ViewModels;
 public enum CategoryKind
 {
     All = 0,
-    Running = 1,
-    Portable = 2,
-    Residue = 3,
-    Undetermined = 4,
-    Checked = 5,
-    Store = 6,
-    Installed = 7,
-    Vendor = 8,
-    System = 9,
+    ThirdParty = 1,
+    Microsoft = 2,
+    UserLevel = 3,
+    Portable = 4,
+    Residue = 5,
+    Running = 6,
+    Checked = 7,
+    SharedRuntime = 8,
+    Driver = 9,
+    System = 10,
+    Undetermined = 11,
+    Store = 12,
+    Msi = 13,
+    Exe = 14,
+    Other = 15,
 }
 
 public enum SortKey
@@ -42,18 +48,14 @@ public sealed partial class CategoryItem : ObservableObject
     [ObservableProperty]
     private bool _isSelected;
 
-    public CategoryItem(CategoryKind kind, string label, string? vendor = null)
+    public CategoryItem(CategoryKind kind, string label)
     {
         Kind = kind;
         Label = label;
-        Vendor = vendor;
     }
 
     public CategoryKind Kind { get; }
     public string Label { get; }
-
-    /// <summary>The publisher for <see cref="CategoryKind.Vendor"/> entries.</summary>
-    public string? Vendor { get; }
 }
 
 /// <summary>
@@ -62,7 +64,6 @@ public sealed partial class CategoryItem : ObservableObject
 /// </summary>
 public sealed partial class AppManagerViewModel : ObservableObject
 {
-    private const int VendorGroups = 8;
     private readonly DetailViewModel _detail;
     private bool _suppressCategoryEvents;
 
@@ -104,22 +105,32 @@ public sealed partial class AppManagerViewModel : ObservableObject
         ];
         _sort = SortOptions[0];
 
-        PrimaryCategories =
+        AppCategories =
         [
             new CategoryItem(CategoryKind.All, Localize.Get("Category.All")),
-            new CategoryItem(CategoryKind.Running, Localize.Get("Category.Running")),
+            new CategoryItem(CategoryKind.ThirdParty, Localize.Get("Category.ThirdParty")),
+            new CategoryItem(CategoryKind.Microsoft, Localize.Get("Category.Microsoft")),
+            new CategoryItem(CategoryKind.UserLevel, Localize.Get("Category.UserLevel")),
             new CategoryItem(CategoryKind.Portable, Localize.Get("Category.Portable")),
             new CategoryItem(CategoryKind.Residue, Localize.Get("Category.Residue")),
-            new CategoryItem(CategoryKind.Undetermined, Localize.Get("Category.Undetermined")),
+            new CategoryItem(CategoryKind.Running, Localize.Get("Category.Running")),
             new CategoryItem(CategoryKind.Checked, Localize.Get("Category.Checked")),
+        ];
+        AdvancedCategories =
+        [
+            new CategoryItem(CategoryKind.SharedRuntime, Localize.Get("Category.SharedRuntime")),
+            new CategoryItem(CategoryKind.Driver, Localize.Get("Category.Driver")),
+            new CategoryItem(CategoryKind.System, Localize.Get("Category.System")),
+            new CategoryItem(CategoryKind.Undetermined, Localize.Get("Category.Undetermined")),
         ];
         SourceCategories =
         [
             new CategoryItem(CategoryKind.Store, Localize.Get("Category.Store")),
-            new CategoryItem(CategoryKind.Installed, Localize.Get("Category.Installed")),
-            new CategoryItem(CategoryKind.System, Localize.Get("Category.System")),
+            new CategoryItem(CategoryKind.Msi, Localize.Get("Category.Msi")),
+            new CategoryItem(CategoryKind.Exe, Localize.Get("Category.Exe")),
+            new CategoryItem(CategoryKind.Other, Localize.Get("Category.Other")),
         ];
-        _selectedCategory = PrimaryCategories[0];
+        _selectedCategory = AppCategories[0];
         _selectedCategory.IsSelected = true;
 
         // The filter reads SelectedCategory, so the view is wired up only once the categories exist.
@@ -134,11 +145,16 @@ public sealed partial class AppManagerViewModel : ObservableObject
 
     public IReadOnlyList<SortOption> SortOptions { get; }
 
-    public ObservableCollection<CategoryItem> PrimaryCategories { get; }
+    public ObservableCollection<CategoryItem> AppCategories { get; }
+
+    public ObservableCollection<CategoryItem> AdvancedCategories { get; }
 
     public ObservableCollection<CategoryItem> SourceCategories { get; }
 
-    public ObservableCollection<CategoryItem> VendorCategories { get; } = [];
+    private IEnumerable<CategoryItem> AllCategories => AppCategories.Concat(AdvancedCategories).Concat(SourceCategories);
+
+    /// <summary>The sidebar entry for a kind, for navigation from the summary cards.</summary>
+    public CategoryItem? Find(CategoryKind kind) => AllCategories.FirstOrDefault(c => c.Kind == kind);
 
     public bool HasChecked => CheckedCount > 0;
 
@@ -172,7 +188,6 @@ public sealed partial class AppManagerViewModel : ObservableObject
             Items.Add(item);
         }
 
-        RebuildVendorCategories();
         RefreshCounts();
         SelectedItem = selectedId is null ? null : Items.FirstOrDefault(i => i.Id == selectedId);
     }
@@ -180,7 +195,7 @@ public sealed partial class AppManagerViewModel : ObservableObject
     /// <summary>Recomputes every count (after sizes arrive or ticks change).</summary>
     public void RefreshCounts()
     {
-        foreach (var category in PrimaryCategories.Concat(SourceCategories).Concat(VendorCategories))
+        foreach (var category in AllCategories)
         {
             category.Count = Items.Count(i => Matches(i, category));
         }
@@ -201,7 +216,7 @@ public sealed partial class AppManagerViewModel : ObservableObject
         }
 
         _suppressCategoryEvents = true;
-        foreach (var c in PrimaryCategories.Concat(SourceCategories).Concat(VendorCategories))
+        foreach (var c in AllCategories)
         {
             c.IsSelected = c == category;
         }
@@ -214,6 +229,21 @@ public sealed partial class AppManagerViewModel : ObservableObject
     private void CheckAllVisible()
     {
         foreach (var item in View.Cast<ApplicationItemViewModel>().Where(i => i.IsActionable))
+        {
+            item.IsChecked = true;
+        }
+    }
+
+    /// <summary>Ticks every actionable item of a kind (the summary card's "移除" for residue); the checklist still confirms each one.</summary>
+    public void CheckAll(CategoryKind kind)
+    {
+        var category = Find(kind);
+        if (category is null)
+        {
+            return;
+        }
+
+        foreach (var item in Items.Where(i => i.IsActionable && Matches(i, category)))
         {
             item.IsChecked = true;
         }
@@ -264,7 +294,7 @@ public sealed partial class AppManagerViewModel : ObservableObject
     {
         if (e.PropertyName == nameof(ApplicationItemViewModel.IsChecked))
         {
-            var checkedCategory = PrimaryCategories.First(c => c.Kind == CategoryKind.Checked);
+            var checkedCategory = AppCategories.First(c => c.Kind == CategoryKind.Checked);
             checkedCategory.Count = Items.Count(i => i.IsChecked);
             var ticked = Items.Where(i => i.IsChecked).ToList();
             CheckedCount = ticked.Count;
@@ -300,21 +330,6 @@ public sealed partial class AppManagerViewModel : ObservableObject
         View.SortDescriptions.Add(new SortDescription(nameof(ApplicationItemViewModel.Name), ListSortDirection.Ascending));
     }
 
-    private void RebuildVendorCategories()
-    {
-        VendorCategories.Clear();
-        var groups = Items
-            .Where(IsListed)
-            .GroupBy(i => i.VendorKey, StringComparer.OrdinalIgnoreCase)
-            .OrderByDescending(g => g.Count())
-            .ThenBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase)
-            .Take(VendorGroups);
-        foreach (var group in groups)
-        {
-            VendorCategories.Add(new CategoryItem(CategoryKind.Vendor, group.Key, group.Key));
-        }
-    }
-
     /// <summary>The main list: real applications. System pieces, undecided folders and idle portable folders live in their own categories.</summary>
     private bool IsListed(ApplicationItemViewModel item)
     {
@@ -329,15 +344,21 @@ public sealed partial class AppManagerViewModel : ObservableObject
     private bool Matches(ApplicationItemViewModel item, CategoryItem category) => category.Kind switch
     {
         CategoryKind.All => IsListed(item),
-        CategoryKind.Running => item.IsRunning && !item.IsSystemLike,
-        CategoryKind.Portable => item.AppType is AppType.Portable or AppType.UserLevel && item.Entity.RegistryEntries.Count == 0,
+        CategoryKind.ThirdParty => IsListed(item) && !item.IsMicrosoft,
+        CategoryKind.Microsoft => IsListed(item) && item.IsMicrosoft,
+        CategoryKind.UserLevel => item.AppType == AppType.UserLevel,
+        CategoryKind.Portable => item.AppType == AppType.Portable,
         CategoryKind.Residue => item.AppType == AppType.SuspectedResidue,
-        CategoryKind.Undetermined => item.AppType == AppType.Undetermined,
+        CategoryKind.Running => item.IsRunning && !item.IsSystemLike,
         CategoryKind.Checked => item.IsChecked,
+        CategoryKind.SharedRuntime => item.AppType == AppType.SharedRuntime,
+        CategoryKind.Driver => item.AppType == AppType.HardwareOrDriver,
+        CategoryKind.System => item.AppType == AppType.SystemComponent,
+        CategoryKind.Undetermined => item.AppType == AppType.Undetermined,
         CategoryKind.Store => item.Source == SourceKind.Store && IsListed(item),
-        CategoryKind.Installed => item.Source == SourceKind.Installed && IsListed(item),
-        CategoryKind.Vendor => IsListed(item) && string.Equals(item.VendorKey, category.Vendor, StringComparison.OrdinalIgnoreCase),
-        CategoryKind.System => item.IsSystemLike,
+        CategoryKind.Msi => item.Source == SourceKind.Msi && IsListed(item),
+        CategoryKind.Exe => item.Source == SourceKind.Exe && IsListed(item),
+        CategoryKind.Other => item.Source == SourceKind.Other && IsListed(item),
         _ => false,
     };
 

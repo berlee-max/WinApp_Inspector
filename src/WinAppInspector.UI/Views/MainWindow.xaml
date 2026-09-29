@@ -8,31 +8,15 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="{StaticResource App.Title}"
-        Width="1240" Height="800" MinWidth="960" MinHeight="600"
+        Width="1240" Height="800" MinWidth="960" MinHeight="620"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource Brush.WindowBackground}"
+        Background="{StaticResource Hero.Background}"
         FontFamily="{StaticResource Font.UI}"
         UseLayoutRounding="True" SnapsToDevicePixels="True">
 
   <Grid>
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="*" />
-      <ColumnDefinition Width="Auto" />
-    </Grid.ColumnDefinitions>
-
     <!-- Hero (home / scanning / summary) and manager share the window; only one is visible. -->
-    <views:HomeView Grid.Column="0" Grid.ColumnSpan="2" Visibility="{Binding IsHeroVisible, Converter={StaticResource BoolToVisibility}}" />
-    <views:ManagerView Grid.Column="0" Visibility="{Binding IsManager, Converter={StaticResource BoolToVisibility}}" />
-
-    <!-- Detail panel (§14), only in the manager -->
-    <Border Grid.Column="1" Style="{StaticResource Detail.Panel}" Width="420">
-      <Border.Visibility>
-        <MultiBinding Converter="{StaticResource AllTrueToVisibility}">
-          <Binding Path="IsManager" />
-          <Binding Path="Detail.HasSelection" />
-        </MultiBinding>
-      </Border.Visibility>
-      <views:DetailPanel DataContext="{Binding Detail}" />
-    </Border>
+    <views:HomeView Visibility="{Binding IsHeroVisible, Converter={StaticResource BoolToVisibility}}" />
+    <views:ManagerView Visibility="{Binding IsManager, Converter={StaticResource BoolToVisibility}}" />
   </Grid>
 </Window>

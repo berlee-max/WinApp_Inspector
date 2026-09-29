@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:WinAppInspector.UI.ViewModels"
+             xmlns:views="clr-namespace:WinAppInspector.UI.Views"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
 
@@ -25,120 +26,136 @@
     </DataTemplate>
   </UserControl.Resources>
 
-  <Grid Background="{StaticResource Brush.WindowBackground}">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
-
-    <!-- Top bar -->
-    <Border Grid.Row="0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1" Padding="16,10">
+  <!-- The manager sits as a rounded light shell inside the dark gradient. -->
+  <Grid Background="{StaticResource Hero.Background}">
+    <Border Style="{StaticResource Manager.Shell}">
       <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <Button Grid.Column="0" Style="{StaticResource Toolbar.Button}" Content="{StaticResource Manager.Back}" Command="{Binding BackToSummaryCommand}" Margin="0" />
-        <TextBlock Grid.Column="1" Text="{StaticResource Manager.Title}" Style="{StaticResource Text.Title}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-        <StackPanel Grid.Column="2" Orientation="Horizontal">
-          <TextBox Style="{StaticResource Search.TextBox}" Width="220" Text="{Binding Manager.SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-          <TextBlock Text="{StaticResource Manager.SortBy}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="14,0,6,0" />
-          <ComboBox Style="{StaticResource Sort.Combo}" ItemsSource="{Binding Manager.SortOptions}" SelectedItem="{Binding Manager.Sort}" DisplayMemberPath="Label" VerticalAlignment="Center" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Manager.AnalyzeFolder}" Command="{Binding AnalyzeFolderCommand}" Margin="14,0,0,0" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Settings}" Command="{Binding OpenSettingsCommand}" />
-        </StackPanel>
-      </Grid>
-    </Border>
-
-    <!-- Sidebar + list -->
-    <Grid Grid.Row="1">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="240" />
-        <ColumnDefinition Width="*" />
-      </Grid.ColumnDefinitions>
-
-      <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="{StaticResource Brush.Surface}" BorderThickness="0">
-        <StackPanel Margin="12,16">
-          <TextBlock Text="{StaticResource Manager.SectionApps}" Style="{StaticResource Sidebar.Header}" />
-          <TextBlock Text="{StaticResource Manager.SectionAppsHint}" Style="{StaticResource Text.Caption}" Margin="12,0,12,10" />
-          <ItemsControl ItemsSource="{Binding Manager.PrimaryCategories}" ItemTemplate="{StaticResource CategoryTemplate}" />
-
-          <TextBlock Text="{StaticResource Manager.SectionSource}" Style="{StaticResource Sidebar.Header}" Margin="12,20,12,6" />
-          <ItemsControl ItemsSource="{Binding Manager.SourceCategories}" ItemTemplate="{StaticResource CategoryTemplate}" />
-
-          <TextBlock Text="{StaticResource Manager.SectionVendor}" Style="{StaticResource Sidebar.Header}" Margin="12,20,12,6" />
-          <ItemsControl ItemsSource="{Binding Manager.VendorCategories}" ItemTemplate="{StaticResource CategoryTemplate}" />
-        </StackPanel>
-      </ScrollViewer>
-
-      <Grid Grid.Column="1">
         <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
+          <RowDefinition Height="62" />
           <RowDefinition Height="*" />
+          <RowDefinition Height="64" />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0" Margin="20,12,20,6">
-          <TextBlock Style="{StaticResource Text.Caption}" VerticalAlignment="Center">
-            <Run Text="{Binding Manager.SelectedCategory.Label, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Manager.VisibleCount, Mode=OneWay}" /><Run Text="{StaticResource Manager.CountSuffix}" />
-          </TextBlock>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Style="{StaticResource Link.Button}" Content="{StaticResource Manager.CheckAll}" Command="{Binding Manager.CheckAllVisibleCommand}" Margin="0,0,14,0" />
-            <Button Style="{StaticResource Link.Button}" Content="{StaticResource Manager.UncheckAll}" Command="{Binding Manager.UncheckAllCommand}" />
-          </StackPanel>
+
+        <!-- Top bar -->
+        <Border Grid.Row="0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1" Padding="20,0" CornerRadius="18,18,0,0">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Style="{StaticResource Manager.Back}" Command="{Binding BackToSummaryCommand}" HorizontalAlignment="Left">
+              <TextBlock><Run Text="‹ " FontSize="24" FontWeight="Light" Foreground="{StaticResource Brush.Accent}" /><Run Text="{StaticResource Manager.Back}" /></TextBlock>
+            </Button>
+            <TextBlock Grid.Column="1" Text="{StaticResource Manager.Title}" Style="{StaticResource Text.Title}" FontSize="16" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+              <TextBox Style="{StaticResource Search.TextBox}" Width="190" Text="{Binding Manager.SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+              <TextBlock Text="{StaticResource Manager.SortBy}" Style="{StaticResource Text.Body}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,0,4,0" />
+              <ComboBox Style="{StaticResource Sort.Combo}" ItemsSource="{Binding Manager.SortOptions}" SelectedItem="{Binding Manager.Sort}" DisplayMemberPath="Label" VerticalAlignment="Center" />
+              <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Manager.AnalyzeFolder}" Command="{Binding AnalyzeFolderCommand}" Margin="14,0,0,0" />
+              <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
+              <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Settings}" Command="{Binding OpenSettingsCommand}" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Sidebar + list + detail -->
+        <Grid Grid.Row="1" Background="{StaticResource Brush.Surface}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="272" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" BorderThickness="0">
+            <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,0" Padding="18,22,14,40">
+              <StackPanel>
+                <TextBlock Text="{StaticResource Manager.SectionApps}" Style="{StaticResource Sidebar.Header}" />
+                <TextBlock Text="{StaticResource Manager.SectionAppsHint}" Style="{StaticResource Sidebar.Desc}" />
+                <ItemsControl ItemsSource="{Binding Manager.AppCategories}" ItemTemplate="{StaticResource CategoryTemplate}" />
+
+                <TextBlock Text="{StaticResource Manager.SectionAdvanced}" Style="{StaticResource Sidebar.SubHeader}" />
+                <ItemsControl ItemsSource="{Binding Manager.AdvancedCategories}" ItemTemplate="{StaticResource CategoryTemplate}" />
+
+                <TextBlock Text="{StaticResource Manager.SectionSource}" Style="{StaticResource Sidebar.SubHeader}" />
+                <ItemsControl ItemsSource="{Binding Manager.SourceCategories}" ItemTemplate="{StaticResource CategoryTemplate}" />
+              </StackPanel>
+            </Border>
+          </ScrollViewer>
+
+          <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="24,12,24,4">
+              <TextBlock Style="{StaticResource Text.Caption}" VerticalAlignment="Center">
+                <Run Text="{Binding Manager.SelectedCategory.Label, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Manager.VisibleCount, Mode=OneWay}" /><Run Text="{StaticResource Manager.CountSuffix}" />
+              </TextBlock>
+              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource Link.Button}" Content="{StaticResource Manager.CheckAll}" Command="{Binding Manager.CheckAllVisibleCommand}" Margin="0,0,14,0" />
+                <Button Style="{StaticResource Link.Button}" Content="{StaticResource Manager.UncheckAll}" Command="{Binding Manager.UncheckAllCommand}" />
+              </StackPanel>
+            </Grid>
+
+            <ListView Grid.Row="1" Style="{StaticResource App.List}" ItemsSource="{Binding Manager.View}" SelectedItem="{Binding Manager.SelectedItem}"
+                      Margin="14,0,14,10" SelectionMode="Single" BorderThickness="0">
+              <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:ApplicationItemViewModel}">
+                  <Grid Height="64">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="36" />
+                      <ColumnDefinition Width="56" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="124" />
+                      <ColumnDefinition Width="92" />
+                      <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox Grid.Column="0" Style="{StaticResource Check.Row}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsActionable}" />
+                    <Grid Grid.Column="1" Width="42" Height="42" VerticalAlignment="Center">
+                      <Border Style="{StaticResource App.IconTile}" Background="{Binding IconBrush}" Visibility="{Binding HasIcon, Converter={StaticResource EmptyToCollapsed}, ConverterParameter=invert}">
+                        <TextBlock Text="{Binding Initial}" Style="{StaticResource App.IconTileText}" />
+                      </Border>
+                      <Image Source="{Binding Icon}" Width="34" Height="34" Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
+                    </Grid>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="12,0,8,0">
+                      <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Cell}" FontSize="15" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding SubtitleText}" Style="{StaticResource Text.CellSecondary}" FontSize="11.5" Margin="0,3,0,0"
+                                 Foreground="{Binding StatusTone, Converter={StaticResource StatusToneBrush}}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3" Text="{Binding InstallDateText}" Style="{StaticResource Text.CellSecondary}" FontSize="12" />
+                    <TextBlock Grid.Column="4" Text="{Binding DiskUsageText}" Style="{StaticResource Text.CellSecondary}" FontSize="12" />
+                    <Button Grid.Column="5" Style="{StaticResource Link.Button}" Content="›" FontSize="25" FontWeight="Light" HorizontalAlignment="Center"
+                            Command="{Binding DataContext.Manager.ShowDetailCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}" />
+                  </Grid>
+                </DataTemplate>
+              </ListView.ItemTemplate>
+            </ListView>
+          </Grid>
+
+          <!-- Detail panel (§14) -->
+          <Border Grid.Column="2" Style="{StaticResource Detail.Panel}" Width="400"
+                  Visibility="{Binding Detail.HasSelection, Converter={StaticResource BoolToVisibility}}">
+            <views:DetailPanel DataContext="{Binding Detail}" />
+          </Border>
         </Grid>
 
-        <ListView Grid.Row="1" Style="{StaticResource App.List}" ItemsSource="{Binding Manager.View}" SelectedItem="{Binding Manager.SelectedItem}"
-                  Margin="20,0,20,12" SelectionMode="Single">
-          <ListView.ItemTemplate>
-            <DataTemplate DataType="{x:Type vm:ApplicationItemViewModel}">
-              <Grid Height="52">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="36" />
-                  <ColumnDefinition Width="52" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="120" />
-                  <ColumnDefinition Width="100" />
-                  <ColumnDefinition Width="36" />
-                </Grid.ColumnDefinitions>
-                <CheckBox Grid.Column="0" Style="{StaticResource Check.Row}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsActionable}" VerticalAlignment="Center" />
-                <Grid Grid.Column="1" Width="36" Height="36" VerticalAlignment="Center">
-                  <Border Style="{StaticResource App.IconFallback}" Visibility="{Binding HasIcon, Converter={StaticResource EmptyToCollapsed}, ConverterParameter=invert}">
-                    <TextBlock Text="{Binding Initial}" Style="{StaticResource App.IconFallbackText}" />
-                  </Border>
-                  <Image Source="{Binding Icon}" Width="32" Height="32" Visibility="{Binding HasIcon, Converter={StaticResource BoolToVisibility}}" />
-                </Grid>
-                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="10,0">
-                  <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Cell}" FontSize="14" FontWeight="SemiBold" />
-                  <TextBlock Text="{Binding SubtitleText}" Style="{StaticResource Text.CellSecondary}" FontSize="12"
-                             Foreground="{Binding StatusTone, Converter={StaticResource StatusToneBrush}}" />
-                </StackPanel>
-                <TextBlock Grid.Column="3" Text="{Binding InstallDateText}" Style="{StaticResource Text.CellSecondary}" />
-                <TextBlock Grid.Column="4" Text="{Binding DiskUsageText}" Style="{StaticResource Text.CellSecondary}" HorizontalAlignment="Right" Margin="0,0,8,0" />
-                <Button Grid.Column="5" Style="{StaticResource Link.Button}" Content="›" FontSize="20" HorizontalAlignment="Center"
-                        Command="{Binding DataContext.Manager.ShowDetailCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                        CommandParameter="{Binding}" />
-              </Grid>
-            </DataTemplate>
-          </ListView.ItemTemplate>
-        </ListView>
-      </Grid>
-    </Grid>
-
-    <!-- Bottom action bar -->
-    <Border Grid.Row="2" Style="{StaticResource Status.Bar}" Padding="20,12">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-          <TextBlock Text="{Binding Manager.CheckedSummaryText}" Style="{StaticResource Text.Body}" FontWeight="SemiBold" />
-          <TextBlock Text="{Binding StatusText}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
-                     Visibility="{Binding StatusText, Converter={StaticResource EmptyToCollapsed}}" />
-        </StackPanel>
-        <Button Grid.Column="1" Style="{StaticResource Accent.Button}" Content="{StaticResource Manager.UninstallChecked}" Command="{Binding UninstallCheckedCommand}" MinWidth="120" Padding="20,10" />
+        <!-- Bottom action bar -->
+        <Border Grid.Row="2" Style="{StaticResource Manager.Bottom}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="{Binding StatusText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" Visibility="{Binding StatusText, Converter={StaticResource EmptyToCollapsed}}" />
+            <TextBlock Grid.Column="1" Text="{Binding Manager.CheckedSummaryText}" Style="{StaticResource Text.Body}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Button Grid.Column="2" Style="{StaticResource Accent.Button}" Content="{StaticResource Manager.UninstallChecked}" Command="{Binding UninstallCheckedCommand}"
+                    HorizontalAlignment="Right" MinWidth="110" Padding="24,10" FontSize="15" FontWeight="SemiBold" />
+          </Grid>
+        </Border>
       </Grid>
     </Border>
   </Grid>
