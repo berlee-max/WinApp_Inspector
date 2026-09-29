@@ -48,7 +48,9 @@ public class AppTypeTests
     [InlineData(AppType.ThirdPartyInstalled, false)]
     [InlineData(AppType.StoreApp, false)]
     [InlineData(AppType.SystemComponent, false)]
-    [InlineData(AppType.Undetermined, false)]
+    [InlineData(AppType.HardwareOrDriver, false)]
+    [InlineData(AppType.SharedRuntime, false)]
+    [InlineData(AppType.Undetermined, true)] // owner's decision: through the checklist, after acknowledging the unknown attribution
     public void Manual_removal_eligibility_follows_section_22(AppType type, bool expected)
     {
         type.IsEligibleForManualRemoval().Should().Be(expected);

@@ -12,6 +12,12 @@ public sealed record DeletionRequest
     public bool UserConfirmed { get; init; }
     /// <summary>Whether services referencing the target have been stopped / removed already.</summary>
     public bool ServicesHandled { get; init; }
+    /// <summary>
+    /// The user has read that attribution could not be established and takes responsibility for the removal (the §22 checklist
+    /// of a 待判断 entry). Lifts <see cref="DeletionBlockerKind.UndeterminedAttribution"/> and <see cref="DeletionBlockerKind.LowConfidence"/>
+    /// only; the "safe to delete" label stays forbidden (§9.10) and every other rule still applies.
+    /// </summary>
+    public bool AttributionAcknowledged { get; init; }
 }
 
 public enum DeletionBlockerKind
@@ -22,7 +28,7 @@ public enum DeletionBlockerKind
     ProtectedPath = 1,
     /// <summary>§9.7–9.9: system components, drivers and shared runtimes are kept.</summary>
     ProtectedApplicationType = 2,
-    /// <summary>§9.10: undetermined entities are never deleted.</summary>
+    /// <summary>§9.10: undetermined entities are not deleted unless the user explicitly acknowledges the missing attribution.</summary>
     UndeterminedAttribution = 3,
     /// <summary>§23: a process from the target is running.</summary>
     ApplicationRunning = 4,
@@ -75,7 +81,7 @@ public sealed class DeletionGuard
             blockers.Add(new DeletionBlocker(DeletionBlockerKind.UserConfirmationRequired));
         }
 
-        if (app.AppType == AppType.Undetermined)
+        if (app.AppType == AppType.Undetermined && !request.AttributionAcknowledged)
         {
             blockers.Add(new DeletionBlocker(DeletionBlockerKind.UndeterminedAttribution, app.Name));
         }
@@ -89,7 +95,7 @@ public sealed class DeletionGuard
             blockers.Add(new DeletionBlocker(DeletionBlockerKind.OfficialUninstallerAvailable, app.PreferredUninstallMethod.ToString()));
         }
 
-        if (app.DetectionConfidence is ConfidenceLevel.Unknown or ConfidenceLevel.Low)
+        if (app.DetectionConfidence is ConfidenceLevel.Unknown or ConfidenceLevel.Low && !request.AttributionAcknowledged)
         {
             blockers.Add(new DeletionBlocker(DeletionBlockerKind.LowConfidence, app.DetectionConfidence.ToString()));
         }

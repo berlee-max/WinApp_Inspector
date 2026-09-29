@@ -131,6 +131,8 @@ public sealed record AppxPackageRecord
     public bool? NonRemovable { get; init; }
     public bool IsBundle { get; init; }
     public string? SignatureKind { get; init; }
+    /// <summary>First application's <c>PackageFamilyName!AppId</c>; addresses the Start-menu entry (icon, launch). Known through the WinRT API only.</summary>
+    public string? AppUserModelId { get; init; }
 }
 
 /// <summary>Version resource of an executable (§7.3).</summary>

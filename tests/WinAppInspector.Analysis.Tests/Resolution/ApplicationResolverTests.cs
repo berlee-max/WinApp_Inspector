@@ -403,14 +403,16 @@ public class ApplicationResolverTests
         b.Package("Microsoft.WindowsCalculator", "Microsoft Corporation", installLocation: $@"{b.ProgramFiles}\WindowsApps\Microsoft.WindowsCalculator_x", displayName: "Windows Calculator")
          .Package("Microsoft.VCLibs.140.00", "Microsoft Corporation", isFramework: true)
          .Package("Microsoft.Windows.ShellExperienceHost", "Microsoft Corporation", signatureKind: "System")
+         .Package("Contoso.InboxTool", "Contoso", installLocation: $@"{b.Folders.SystemRoot}\SystemApps\Contoso.InboxTool_x", signatureKind: "Store")
          .Package("SpotifyAB.SpotifyMusic", "Spotify AB", installLocation: $@"{b.ProgramFiles}\WindowsApps\SpotifyAB.SpotifyMusic_x");
 
         var apps = Resolve(b).Applications;
 
-        apps.Should().HaveCount(4);
+        apps.Should().HaveCount(5);
         apps.Single(a => a.Name == "Windows Calculator").AppType.Should().Be(AppType.StoreApp);
         apps.Single(a => a.Name == "Microsoft.VCLibs.140.00").AppType.Should().Be(AppType.SharedRuntime);
         apps.Single(a => a.Name == "Microsoft.Windows.ShellExperienceHost").AppType.Should().Be(AppType.SystemComponent);
+        apps.Single(a => a.Name == "Contoso.InboxTool").AppType.Should().Be(AppType.SystemComponent, "anything installed under the Windows folder is the OS itself");
         var spotify = apps.Single(a => a.Name == "SpotifyAB.SpotifyMusic");
         spotify.AppType.Should().Be(AppType.StoreApp);
         spotify.Publisher.Should().Be("Spotify AB");

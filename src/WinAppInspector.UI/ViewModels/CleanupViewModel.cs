@@ -81,6 +81,11 @@ public sealed partial class CleanupViewModel : ObservableObject
 
     public string PermanentWarningText => Localize.Get("Cleanup.PermanentWarning");
 
+    /// <summary>§9.10: a 待判断 entry is removable only with this warning in view; ticking the confirmation is the acknowledgement.</summary>
+    public bool IsAttributionUnknown => _application.AppType == AppType.Undetermined;
+
+    public string AttributionWarningText => Localize.Get("Cleanup.UndeterminedWarning");
+
     public bool CanExecute => UserConfirmed && SelectedCount > 0 && (!NeedsPermanentAcknowledgement || PermanentAcknowledged);
 
     public void SelectionChanged()
@@ -99,5 +104,7 @@ public sealed partial class CleanupViewModel : ObservableObject
         UserConfirmed = UserConfirmed,
         UseRecycleBin = UseRecycleBin,
         PermanentDeletionAcknowledged = PermanentAcknowledged,
+        // The warning is on screen whenever the entry is 待判断; ticking the confirmation is the acknowledgement.
+        AttributionAcknowledged = IsAttributionUnknown && UserConfirmed,
     };
 }

@@ -21,7 +21,8 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
 {
     private readonly IconService _icons;
     private ImageSource? _icon;
-    private bool _iconLoaded;
+    private bool _iconRequested;
+    private bool _sizeSettled;
 
     /// <summary>Ticked in the app manager for a bulk uninstall / removal.</summary>
     [ObservableProperty]
@@ -52,9 +53,22 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
     /// <summary>Sort key: unknown sizes sort last.</summary>
     public long SizeSortKey => DiskUsageBytes ?? -1;
 
+    /// <summary>Measured size, else the registry estimate, else "计算中…" until the size pass has finished and "—" after it.</summary>
     public string DiskUsageText => Entity.DiskUsageBytes is not null
         ? Localize.Bytes(Entity.DiskUsageBytes)
-        : Entity.EstimatedSizeBytes is not null ? Localize.Bytes(Entity.EstimatedSizeBytes) + " *" : Localize.Get("Size.Pending");
+        : Entity.EstimatedSizeBytes is not null ? Localize.Bytes(Entity.EstimatedSizeBytes) + " *"
+        : _sizeSettled ? Localize.Get("Size.Unavailable") : Localize.Get("Size.Pending");
+
+    /// <summary>The background size pass is over (or the list came from the cache): what has no size now never will, e.g. a Store
+    /// package under the unreadable WindowsApps folder. Stops the row from saying "计算中…" forever.</summary>
+    public void MarkSizeSettled()
+    {
+        if (!_sizeSettled)
+        {
+            _sizeSettled = true;
+            OnPropertyChanged(nameof(DiskUsageText));
+        }
+    }
 
     /// <summary>Install date from the registry, otherwise the newest directory change; empty when neither is known.</summary>
     public DateTime? InstallDate => Entity.InstallDate?.ToDateTime(TimeOnly.MinValue) ?? Entity.LastModified?.ToLocalTime().DateTime;
@@ -126,14 +140,40 @@ public sealed partial class ApplicationItemViewModel : ObservableObject
         ? $"{Publisher} · {TypeText} · {StatusText}"
         : $"{Publisher} · {TypeText}";
 
+    /// <summary>Loaded on a pool thread the first time the row is shown; the shell calls behind it are too slow for the UI thread.</summary>
     public ImageSource? Icon
     {
         get
         {
-            if (!_iconLoaded)
+            if (!_iconRequested)
             {
-                _iconLoaded = true;
-                _icon = _icons.GetIcon(Entity.MainExecutable ?? Core.Parsing.CommandLine.ExtractExecutable(Entity.IconPath));
+                _iconRequested = true;
+                var entity = Entity;
+                var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                _ = Task.Run(() =>
+                {
+                    var icon = _icons.GetIcon(entity);
+                    if (icon is null)
+                    {
+                        return;
+                    }
+
+                    void Apply()
+                    {
+                        _icon = icon;
+                        OnPropertyChanged(nameof(Icon));
+                        OnPropertyChanged(nameof(HasIcon));
+                    }
+
+                    if (dispatcher is null || dispatcher.CheckAccess())
+                    {
+                        Apply();
+                    }
+                    else
+                    {
+                        _ = dispatcher.BeginInvoke(Apply);
+                    }
+                });
             }
 
             return _icon;

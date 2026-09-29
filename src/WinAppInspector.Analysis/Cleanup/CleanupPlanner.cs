@@ -46,6 +46,9 @@ public sealed class CleanupPlanner
                     TargetPaths = [directory.Path],
                     UserConfirmed = true,
                     ServicesHandled = true,
+                    // A 待判断 entry only reaches this checklist through the explicit manual-removal path; the checklist shows the
+                    // attribution warning and the user must tick the confirmation before anything runs.
+                    AttributionAcknowledged = app.AppType == AppType.Undetermined,
                 });
                 blocked = verdict.HardBlockers.Count == 0 ? null : string.Join(", ", verdict.HardBlockers.Select(b => b.Kind.ToString()).Distinct());
             }
@@ -146,6 +149,11 @@ public sealed class CleanupPlanner
         if (!plan.UserConfirmed)
         {
             problems.Add(DeletionBlockerKind.UserConfirmationRequired.ToString());
+        }
+
+        if (plan.Application.AppType == AppType.Undetermined && !plan.AttributionAcknowledged)
+        {
+            problems.Add(DeletionBlockerKind.UndeterminedAttribution.ToString());
         }
 
         foreach (var item in plan.Items)

@@ -61,6 +61,8 @@ public sealed class PackageManagerAppxProvider : IAppxPackageProvider
                 NonRemovable = null,
                 IsBundle = package.IsBundle,
                 SignatureKind = TryGet(() => package.SignatureKind.ToString()),
+                // Already on a pool thread (Task.Run above), so the async projection is waited synchronously.
+                AppUserModelId = TryGet(() => FirstAppUserModelId(package)),
             };
         }
         catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException or ArgumentException)
@@ -69,6 +71,12 @@ public sealed class PackageManagerAppxProvider : IAppxPackageProvider
             _logger.LogDebug(ex, "Skipping a package that could not be read");
             return null;
         }
+    }
+
+    private static string? FirstAppUserModelId(Package package)
+    {
+        var entries = package.GetAppListEntriesAsync().AsTask().GetAwaiter().GetResult();
+        return entries.Count > 0 ? entries[0].AppUserModelId : null;
     }
 
     private static string? TryGet(Func<string?> getter)

@@ -195,6 +195,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         LoadResults(cached.Applications, []);
+        foreach (var item in _itemsById.Values)
+        {
+            item.MarkSizeSettled(); // the cache holds whatever the previous size pass produced; nothing more is coming
+        }
+
         _lastScanTime = cached.ScanTime;
         LastScanText = Localize.Format("Status.CachedScanFormat", FormatTime(cached.ScanTime));
         Stage = ShellStage.Summary;
@@ -478,7 +483,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         ResidueCount = residue.Count;
         ResidueSizeText = residue.Any(i => i.Entity.DiskUsageBytes is not null)
             ? Localize.Bytes(residue.Sum(i => i.Entity.DiskUsageBytes ?? 0))
-            : Localize.Get("Size.Pending");
+            : residue.Count == 0 ? string.Empty : Localize.Get("Size.Pending");
         UndeterminedCount = items.Count(i => i.AppType == AppType.Undetermined);
     }
 
@@ -493,6 +498,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             await _scanService.ComputeSizesAsync(applications, OnSize, null, token);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
+                foreach (var item in _itemsById.Values)
+                {
+                    item.MarkSizeSettled();
+                }
+
                 Manager.RefreshCounts();
                 RefreshSummary();
             });

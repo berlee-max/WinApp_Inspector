@@ -45,7 +45,7 @@ public sealed class AppClassifier
 
         var type = draft.Seed switch
         {
-            SeedKind.Package => ClassifyPackage(draft, isMicrosoft, reasons),
+            SeedKind.Package => ClassifyPackage(draft, folders, isMicrosoft, reasons),
             SeedKind.Registry => ClassifyRegistry(draft, folders, isMicrosoft, reasons),
             SeedKind.Process => ClassifyProcess(draft, folders, isMicrosoft, reasons),
             _ => ClassifyDirectory(draft, folders, isMicrosoft, reasons, now),
@@ -54,7 +54,7 @@ public sealed class AppClassifier
         return new ClassificationResult(type, isMicrosoft, reasons);
     }
 
-    private AppType ClassifyPackage(EntityDraft draft, bool isMicrosoft, List<Reason> reasons)
+    private AppType ClassifyPackage(EntityDraft draft, WindowsKnownFolders folders, bool isMicrosoft, List<Reason> reasons)
     {
         var package = draft.Packages[0];
         reasons.Add(new Reason(ReasonKind.AppxPackageFound, package.PackageFamilyName));
@@ -72,6 +72,14 @@ public sealed class AppClassifier
         if (draft.Packages.Any(p => p.NonRemovable == true))
         {
             reasons.Add(new Reason(ReasonKind.AppxNonRemovable));
+            return AppType.SystemComponent;
+        }
+
+        // Packages that live inside the Windows folder (C:\Windows\SystemApps, ...) are the OS itself, whoever signed them.
+        var insideWindows = draft.Packages.Select(p => p.InstallLocation).FirstOrDefault(l => l is not null && WindowsPath.IsSameOrUnder(l, folders.SystemRoot));
+        if (insideWindows is not null)
+        {
+            reasons.Add(new Reason(ReasonKind.RegistrySystemComponentFlag, "Installed under " + folders.SystemRoot));
             return AppType.SystemComponent;
         }
 

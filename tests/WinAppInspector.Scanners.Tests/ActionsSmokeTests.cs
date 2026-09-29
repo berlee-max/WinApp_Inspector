@@ -181,4 +181,23 @@ public class ActionsSmokeTests
 
         UninstallManager.ChooseRoute(new ApplicationEntity { Id = "4", Name = "D" }, preferQuiet: false).Method.Should().Be(UninstallMethod.None);
     }
+
+    /// <summary>Models an NSIS-style uninstaller: the launched process spawns a detached child and exits at once.</summary>
+    [WindowsFact]
+    public async Task Detached_uninstaller_child_is_waited_for()
+    {
+        var launchedAt = DateTime.UtcNow;
+        using var launcher = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c start \"\" /b cmd.exe /c \"ping -n 5 127.0.0.1 >nul\"")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        })!;
+        await launcher.WaitForExitAsync();
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
+        var observed = await DetachedUninstallerWatcher.WaitForDescendantsAsync(launcher.Id, launchedAt, TimeSpan.FromSeconds(30), NullLogger.Instance, CancellationToken.None);
+
+        observed.Should().BeGreaterThan(0, "the detached cmd.exe running ping is a descendant of the launcher");
+        watch.Elapsed.Should().BeGreaterThan(TimeSpan.FromSeconds(2), "the wait must last until the detached child has exited");
+    }
 }

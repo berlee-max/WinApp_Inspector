@@ -72,6 +72,8 @@ public sealed record CleanupPlan
     public bool UseRecycleBin { get; init; } = true;
     /// <summary>§24: the user has acknowledged that items which cannot be recycled are deleted permanently.</summary>
     public bool PermanentDeletionAcknowledged { get; init; }
+    /// <summary>§9.10: for a 待判断 entry, the user has read the attribution warning and takes responsibility (see <c>DeletionRequest.AttributionAcknowledged</c>).</summary>
+    public bool AttributionAcknowledged { get; init; }
 }
 
 public sealed record CleanupItemResult(CleanupCandidate Item, bool Succeeded, bool PermanentlyDeleted, string? Error);
