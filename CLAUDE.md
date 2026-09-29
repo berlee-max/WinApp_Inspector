@@ -96,5 +96,6 @@ tests/WinAppInspector.Analysis.Tests  net8.0
 ## 验证状态（请如实更新）
 
 - 在 Linux 上：`dotnet build` 全部通过（0 警告），Core / Analysis 单元测试全部通过。
-- 在 Windows 上：**尚未运行过**。`tests/WinAppInspector.Scanners.Tests` 中的 `[WindowsFact]` 冒烟测试只在 windows-latest CI 或 Windows 机器上执行；WPF 界面只在 Windows 上验证过编译，未验证过运行时绑定和布局。
-- 首次在 Windows 上运行时优先检查：SignatureReader（WinVerifyTrust）、RecycleBin（SHFileOperation）、PackageManager 调用、WPF 绑定错误（输出窗口的 System.Windows.Data Error）。
+- 在 Windows 上（CI windows-latest，Windows Server 2025）：`tests/WinAppInspector.Scanners.Tests` 中的 `[WindowsFact]` 冒烟测试在每个 PR 上真实执行并全部通过，覆盖注册表 / AppX（PackageManager 与 PowerShell）/ 目录 / 进程 / 服务 / 启动项 / 计划任务扫描器、WinVerifyTrust 签名读取、操作日志、注册表探测、临时目录的回收站删除、Startup 文件夹清理和卸载管理器的拒绝路径。
+- 首次 Windows 运行暴露并已修复的问题（都在 Linux 无法执行的代码里）：签名者取的是证书 CN（".NET"）而不是 O（"Microsoft Corporation"）；根目录计划任务的 `TaskPath` 为空；`SHFILEOPSTRUCT` 用了 `Pack=1`（32 位布局），x64 上 `SHFileOperationW` 直接 AccessViolation。
+- 仍未在 Windows 上验证：WPF 界面的运行时绑定与布局（只验证过编译；关注输出窗口的 System.Windows.Data Error）、对真实软件的卸载与残留清理、资源管理器右键菜单注册与 `--analyze` 启动参数、系统还原点创建。
