@@ -41,6 +41,8 @@ public enum DirectoryRole
     Cache = 3,
     /// <summary>Logs or crash reports.</summary>
     Logs = 4,
+    /// <summary>A vendor / parent folder (e.g. <c>Program Files\Google</c>) shared by several applications. Never deleted as a whole (§5.4).</summary>
+    SharedParent = 5,
 }
 
 /// <summary>Official uninstall methods in the order they must be preferred (§5.2, §20.1).</summary>

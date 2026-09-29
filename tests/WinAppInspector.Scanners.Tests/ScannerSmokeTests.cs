@@ -169,6 +169,17 @@ public class ScannerSmokeTests
     }
 
     [WindowsFact]
+    public async Task ShortcutScanner_resolves_start_menu_shortcuts()
+    {
+        var scanner = new ShortcutScanner(Folders, new ShortcutResolver(NullLogger<ShortcutResolver>.Instance), NullLogger<ShortcutScanner>.Instance);
+
+        var result = await scanner.ScanAsync(null, CancellationToken.None);
+
+        result.Errors.Should().BeEmpty();
+        result.Items.Should().OnlyContain(s => s.TargetPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [WindowsFact]
     public async Task ScheduledTaskScanner_lists_tasks()
     {
         var scanner = new ScheduledTaskScanner(Folders, NullLogger<ScheduledTaskScanner>.Instance);

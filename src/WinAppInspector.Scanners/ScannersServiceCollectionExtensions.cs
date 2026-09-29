@@ -43,6 +43,8 @@ public static class ScannersServiceCollectionExtensions
         services.AddSingleton<IScanner<ServiceRecord>>(sp => sp.GetRequiredService<ServiceScanner>());
         services.AddSingleton<StartupScanner>();
         services.AddSingleton<IScanner<StartupItemRecord>>(sp => sp.GetRequiredService<StartupScanner>());
+        services.AddSingleton<ShortcutScanner>();
+        services.AddSingleton<IScanner<ShortcutRecord>>(sp => sp.GetRequiredService<ShortcutScanner>());
         services.AddSingleton<ScheduledTaskScanner>();
         services.AddSingleton<IScanner<ScheduledTaskRecord>>(sp => sp.GetRequiredService<ScheduledTaskScanner>());
 

@@ -40,3 +40,4 @@ dotnet_diagnostic.CA1310.severity = none   # StringComparison on StartsWith(stri
 dotnet_diagnostic.CA1707.severity = none   # Underscores in test method names
 dotnet_diagnostic.CA1002.severity = none   # Generic List exposure
 dotnet_diagnostic.CA1819.severity = none   # Array properties
+dotnet_diagnostic.CA1822.severity = suggestion   # Injectable services keep instance members even when stateless

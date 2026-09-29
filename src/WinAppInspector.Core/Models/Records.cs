@@ -12,7 +12,23 @@ public sealed record AppDirectory
     public long? SizeBytes { get; init; }
     public int? FileCount { get; init; }
     public IReadOnlyList<string> ExecutablePaths { get; init; } = [];
+    /// <summary>Names of the immediate sub-directories, used by residue / cache heuristics (§9.5–9.6).</summary>
+    public IReadOnlyList<string> ChildDirectoryNames { get; init; } = [];
+    /// <summary>Number of files directly inside the directory (not recursive).</summary>
+    public int? TopLevelFileCount { get; init; }
+    /// <summary>Why this directory was attributed to its application (§10.2, §42). Empty until resolved.</summary>
+    public IReadOnlyList<Evidence.EvidenceItem> AttributionEvidence { get; init; } = [];
     public bool ContainsExecutables => ExecutablePaths.Count > 0;
+}
+
+/// <summary>A resolved shortcut from the Start Menu or Desktop (§7.9).</summary>
+public sealed record ShortcutRecord
+{
+    public required string ShortcutPath { get; init; }
+    public required string Name { get; init; }
+    public required string TargetPath { get; init; }
+    public string? Arguments { get; init; }
+    public string? WorkingDirectory { get; init; }
 }
 
 /// <summary>A running process (§7.5).</summary>

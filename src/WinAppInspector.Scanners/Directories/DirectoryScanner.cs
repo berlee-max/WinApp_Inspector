@@ -124,6 +124,18 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
         var executables = new List<string>();
         CollectExecutables(dir, _options.ExecutableSearchDepth, executables, cancellationToken);
 
+        var childNames = new List<string>();
+        int? fileCount = null;
+        try
+        {
+            childNames.AddRange(dir.EnumerateDirectories("*", ChildOptions).Select(d => d.Name));
+            fileCount = dir.EnumerateFiles("*", ChildOptions).Count();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            _logger.LogDebug(ex, "Could not list {Directory}", dir.FullName);
+        }
+
         return new AppDirectory
         {
             Path = WindowsPath.Normalize(dir.FullName),
@@ -132,6 +144,8 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
             LastWriteTime = SafeTime(() => dir.LastWriteTimeUtc),
             CreationTime = SafeTime(() => dir.CreationTimeUtc),
             ExecutablePaths = executables,
+            ChildDirectoryNames = childNames,
+            TopLevelFileCount = fileCount,
         };
     }
 
