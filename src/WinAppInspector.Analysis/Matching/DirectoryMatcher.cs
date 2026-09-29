@@ -136,6 +136,8 @@ public sealed class DirectoryMatcher
         }
 
         // Folder name: exact (normalised) equality with the app name or its install folder is medium evidence; similarity is low.
+        // A folder named after the publisher is a vendor folder, except for Microsoft: "Microsoft" folders are platform data
+        // shared by hundreds of packages, and attaching them to every Store app would drown the results.
         var folderName = WindowsPath.GetFileName(dirPath);
         var compactFolder = NameNormalizer.Compact(folderName);
         var publisherOnly = false;
@@ -147,7 +149,7 @@ public sealed class DirectoryMatcher
             {
                 Add(evidence, EvidenceKind.FolderNameExactMatch, $"{folderName} = {candidate.Name}");
             }
-            else if (candidate.Seed != SeedKind.Directory && candidate.Publisher is not null &&
+            else if (candidate.Seed != SeedKind.Directory && candidate.Publisher is not null && !_publishers.IsMicrosoft(candidate.Publisher) &&
                      compactFolder == NameNormalizer.Compact(_publishers.Normalize(candidate.Publisher)))
             {
                 Add(evidence, EvidenceKind.FolderNameExactMatch, $"{folderName} = {candidate.Publisher}");

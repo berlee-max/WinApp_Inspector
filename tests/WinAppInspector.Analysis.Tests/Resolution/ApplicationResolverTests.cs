@@ -197,6 +197,30 @@ public class ApplicationResolverTests
     }
 
     [Fact]
+    public void Microsoft_platform_folders_are_not_attached_to_every_microsoft_package()
+    {
+        var b = new SnapshotBuilder();
+        b.Package("Microsoft.GetStarted", "Microsoft Corporation", displayName: "Get Started")
+         .Package("Microsoft.LockApp", "Microsoft Corporation", displayName: "Lock App")
+         .Registry("Microsoft Edge", "Microsoft Corporation", installLocation: $@"{b.ProgramFiles}\Microsoft\Edge\Application")
+         .Directory($@"{b.Local}\Microsoft", children: ["Windows", "Edge"])
+         .Directory($@"{b.Roaming}\Microsoft", children: ["Windows"])
+         .Directory($@"{b.ProgramFiles}\Microsoft", children: ["Edge"]);
+
+        var apps = Resolve(b).Applications;
+
+        foreach (var package in apps.Where(a => a.Packages.Count > 0))
+        {
+            package.Directories.Should().BeEmpty($"{package.Name} has no folder of its own; the Microsoft folders are platform data");
+        }
+
+        apps.Where(a => a.Name == "Microsoft Edge").Should().ContainSingle().Which.Directories
+            .Should().OnlyContain(d => d.Role == DirectoryRole.SharedParent && d.Path == $@"{b.ProgramFiles}\Microsoft", "Edge is registered beneath Program Files/Microsoft");
+        apps.Where(a => a.Directories.Any(d => d.Path == $@"{b.Local}\Microsoft")).Should().ContainSingle()
+            .Which.AppType.Should().Be(AppType.SystemComponent, "AppData/Local/Microsoft is a known platform folder");
+    }
+
+    [Fact]
     public void Vendor_folder_shared_by_two_products_is_attached_to_both_as_shared_parent()
     {
         var b = new SnapshotBuilder();
