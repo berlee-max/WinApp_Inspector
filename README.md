@@ -51,7 +51,7 @@ tests/WinAppInspector.Scanners.Tests    Windows 冒烟测试（[WindowsFact]，�
     runtime\                  自带的 .NET 8 桌面运行时
   ```
 
-  启动器把 `runtime\` 交给 `app\WinAppInspector.exe` 使用，然后退出。WPF 不支持裁剪，所以 `runtime\` 是完整的 .NET 8 + WPF 运行时，解压后约 150 MB；这是自包含 WPF 程序的下限。
+  启动器把 `runtime\` 交给 `app\WinAppInspector.exe` 使用，然后退出。WPF 不支持裁剪，所以 `runtime\` 是完整的 .NET 8 + WPF 运行时，解压后约 190 MB；这是自包含 WPF 程序的下限。
 - `WinAppInspector-<版本>-win-x64-lite.zip`：**精简版**，单个 exe 约 8 MB（与便携版的 `app\WinAppInspector.exe` 是同一个文件），需要已安装 .NET 8 Desktop Runtime（没装时 exe 会提示下载）。
 
 不提供压缩的单文件自包含 exe：字节数一样多，却要在每次启动时解压到临时目录。
