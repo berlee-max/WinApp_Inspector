@@ -136,35 +136,8 @@ public static class WindowsPath
         return parent.Length == 2 && parent[1] == ':' ? parent + Separator : parent;
     }
 
-    /// <summary>
-    /// Extracts the executable path from a command line such as
-    /// <c>"C:\Program Files\App\unins000.exe" /SILENT</c> or <c>C:\App\app.exe --flag</c>.
-    /// Returns <c>null</c> when nothing path-like is found.
-    /// </summary>
-    public static string? ExtractExecutable(string? commandLine)
-    {
-        if (string.IsNullOrWhiteSpace(commandLine))
-        {
-            return null;
-        }
-
-        var s = commandLine.Trim();
-        if (s[0] == '"')
-        {
-            var close = s.IndexOf('"', 1);
-            return close > 1 ? Normalize(s[1..close]) : null;
-        }
-
-        // Unquoted: the executable ends at ".exe" (case-insensitive) if present, otherwise at the first space.
-        var exeIdx = s.IndexOf(".exe", StringComparison.OrdinalIgnoreCase);
-        if (exeIdx >= 0)
-        {
-            return Normalize(s[..(exeIdx + 4)]);
-        }
-
-        var space = s.IndexOf(' ', StringComparison.Ordinal);
-        return Normalize(space < 0 ? s : s[..space]);
-    }
+    /// <summary>Shorthand for <see cref="Parsing.CommandLine.ExtractExecutable"/>.</summary>
+    public static string? ExtractExecutable(string? commandLine) => Parsing.CommandLine.ExtractExecutable(commandLine);
 
     private static bool IsDriveLetter(char c) => c is >= 'a' and <= 'z' or >= 'A' and <= 'Z';
 

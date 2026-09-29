@@ -112,4 +112,22 @@ public sealed record WindowsKnownFolders
 
     /// <summary>True when the path lies inside the current user's profile.</summary>
     public bool IsInUserProfile(string? path) => WindowsPath.IsSameOrUnder(path, UserProfile);
+
+    /// <summary>The environment variables that commonly appear in registry commands, derived from these folders.</summary>
+    public IReadOnlyDictionary<string, string> ToEnvironment() => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["SystemDrive"] = SystemDrive.TrimEnd(WindowsPath.Separator),
+        ["SystemRoot"] = SystemRoot,
+        ["windir"] = SystemRoot,
+        ["ProgramFiles"] = ProgramFiles,
+        ["ProgramW6432"] = ProgramFiles,
+        ["ProgramFiles(x86)"] = ProgramFilesX86,
+        ["ProgramData"] = ProgramData,
+        ["ALLUSERSPROFILE"] = ProgramData,
+        ["UserProfile"] = UserProfile,
+        ["LocalAppData"] = LocalAppData,
+        ["AppData"] = RoamingAppData,
+        ["HomeDrive"] = SystemDrive.TrimEnd(WindowsPath.Separator),
+        ["Public"] = WindowsPath.Combine(UsersRoot, "Public"),
+    };
 }

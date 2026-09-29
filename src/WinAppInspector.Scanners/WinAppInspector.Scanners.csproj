@@ -2,7 +2,8 @@
 
   <!-- Scanners: the only place (besides Actions) that touches the registry, WMI, Win32 and AppX. Windows-only at runtime. -->
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <RootNamespace>WinAppInspector.Scanners</RootNamespace>
   </PropertyGroup>
 
@@ -13,6 +14,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="System.Management" />
+    <PackageReference Include="TaskScheduler" />
   </ItemGroup>
 
 </Project>
