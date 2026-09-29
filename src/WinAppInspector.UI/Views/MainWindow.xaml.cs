@@ -20,8 +20,9 @@ public partial class MainWindow : Window
         viewModel.AboutRequested += (_, _) => new AboutWindow { Owner = this }.ShowDialog();
 
         // Populate the overview on first launch; the scan runs off the UI thread and reports progress (§31).
-        Loaded += (_, _) =>
+        Loaded += async (_, _) =>
         {
+            await viewModel.LoadCacheAsync();
             if (viewModel.RescanCommand.CanExecute(null))
             {
                 viewModel.RescanCommand.Execute(null);

@@ -68,6 +68,7 @@
           <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.CancelScan}"
                   Command="{Binding CancelScanCommand}"
                   Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}" />
+          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
           <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Settings}" Command="{Binding OpenSettingsCommand}" />
           <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.About}" Command="{Binding OpenAboutCommand}" />
         </StackPanel>

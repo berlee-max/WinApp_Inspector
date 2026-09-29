@@ -15,6 +15,7 @@
   <sys:String x:Key="Nav.Uninstall">卸载与清理</sys:String>
   <sys:String x:Key="Nav.Rescan">重新扫描</sys:String>
   <sys:String x:Key="Nav.CancelScan">停止扫描</sys:String>
+  <sys:String x:Key="Nav.Export">导出报告</sys:String>
   <sys:String x:Key="Nav.Settings">设置</sys:String>
   <sys:String x:Key="Nav.About">关于</sys:String>
 
@@ -83,6 +84,7 @@
   <sys:String x:Key="Status.ScanDoneFormat">扫描完成：识别 {0} 个应用实体，{1} 个读取错误</sys:String>
   <sys:String x:Key="Status.ScanFailedFormat">扫描失败：{0}</sys:String>
   <sys:String x:Key="Status.LastScanFormat">上次扫描：{0}</sys:String>
+  <sys:String x:Key="Status.CachedScanFormat">上次扫描：{0}（缓存结果，正在重新扫描）</sys:String>
   <sys:String x:Key="Status.AnalyzingFormat">正在分析 {0}…</sys:String>
   <sys:String x:Key="Status.AnalyzedFormat">已分析 {0}：{1}</sys:String>
   <sys:String x:Key="Status.AnalyzeFailedFormat">无法分析 {0}：{1}</sys:String>
@@ -346,6 +348,18 @@
   <sys:String x:Key="Settings.ReadSignatures">扫描数字签名</sys:String>
   <sys:String x:Key="Settings.ScanTasks">扫描计划任务</sys:String>
   <sys:String x:Key="Settings.ScanServices">扫描服务</sys:String>
+  <sys:String x:Key="Settings.ContextMenu">在资源管理器右键菜单中添加"使用 WinApp Inspector 分析"</sys:String>
+  <sys:String x:Key="Shell.MenuText">使用 WinApp Inspector 分析</sys:String>
+  <sys:String x:Key="Shell.RegisterFailed">无法更新资源管理器右键菜单：</sys:String>
+
+  <!-- §44 export -->
+  <sys:String x:Key="Export.Title">导出扫描报告</sys:String>
+  <sys:String x:Key="Export.ReportTitle">WinApp Inspector 软件清单</sys:String>
+  <sys:String x:Key="Export.Filter">CSV 表格 (*.csv)|*.csv|JSON (*.json)|*.json|HTML 网页 (*.html)|*.html</sys:String>
+  <sys:String x:Key="Export.ScanTime">扫描时间</sys:String>
+  <sys:String x:Key="Export.GeneratedBy">由 WinApp Inspector 生成</sys:String>
+  <sys:String x:Key="Export.DoneFormat">已导出 {0} 项到 {1}</sys:String>
+  <sys:String x:Key="Export.FailedFormat">无法写入 {0}</sys:String>
   <sys:String x:Key="Settings.Save">保存</sys:String>
   <sys:String x:Key="Settings.Cancel">取消</sys:String>
   <sys:String x:Key="Settings.RescanHint">扫描范围的更改在下次扫描时生效。</sys:String>

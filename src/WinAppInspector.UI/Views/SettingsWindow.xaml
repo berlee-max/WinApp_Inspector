@@ -32,7 +32,8 @@
         <CheckBox Style="{StaticResource Check.Body}" Content="{StaticResource Settings.HideSystem}" IsChecked="{Binding Draft.HideSystemComponents}" />
         <CheckBox Style="{StaticResource Check.Body}" Content="{StaticResource Settings.ReadSignatures}" IsChecked="{Binding Draft.ReadSignatures}" />
         <CheckBox Style="{StaticResource Check.Body}" Content="{StaticResource Settings.ScanTasks}" IsChecked="{Binding Draft.ScanScheduledTasks}" />
-        <CheckBox Style="{StaticResource Check.Body}" Content="{StaticResource Settings.ScanServices}" IsChecked="{Binding Draft.ScanServices}" Margin="0" />
+        <CheckBox Style="{StaticResource Check.Body}" Content="{StaticResource Settings.ScanServices}" IsChecked="{Binding Draft.ScanServices}" />
+        <CheckBox Style="{StaticResource Check.Body}" Content="{StaticResource Settings.ContextMenu}" IsChecked="{Binding Draft.ExplorerContextMenu}" Margin="0" />
       </StackPanel>
     </Border>
 

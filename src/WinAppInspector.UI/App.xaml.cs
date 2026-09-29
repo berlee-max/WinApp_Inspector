@@ -49,6 +49,7 @@ public partial class App : Application
                 services.AddSingleton<IScanService, ScanService>();
                 services.AddSingleton<IconService>();
                 services.AddSingleton<IDialogService, DialogService>();
+                services.AddSingleton(sp => new ScanCache(DataDirectory, sp.GetRequiredService<ILogger<ScanCache>>()));
 
                 services.AddSingleton<DetailViewModel>();
                 services.AddSingleton<OverviewViewModel>();
@@ -65,6 +66,13 @@ public partial class App : Application
         var window = _host.Services.GetRequiredService<MainWindow>();
         MainWindow = window;
         window.Show();
+
+        // §19: launched from the Explorer context menu.
+        var analyzeIndex = Array.FindIndex(e.Args, a => a.Equals(Actions.Platform.ShellIntegration.AnalyzeSwitch, StringComparison.OrdinalIgnoreCase));
+        if (analyzeIndex >= 0 && analyzeIndex + 1 < e.Args.Length)
+        {
+            _host.Services.GetRequiredService<MainViewModel>().RequestAnalyzeOnStartup(e.Args[analyzeIndex + 1]);
+        }
     }
 
     protected override async void OnExit(ExitEventArgs e)

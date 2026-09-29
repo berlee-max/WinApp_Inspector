@@ -29,6 +29,7 @@ public static class ActionsServiceCollectionExtensions
         services.AddSingleton<IResidueScanner, ResidueScanner>();
         services.AddSingleton<IProcessController, ProcessController>();
         services.AddSingleton<IRestorePointManager, RestorePointManager>();
+        services.AddSingleton<IShellIntegration, ShellIntegration>();
         return services;
     }
 }
