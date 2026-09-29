@@ -45,6 +45,23 @@ public sealed record ScanOptions
     public int MaxExecutablesPerDirectory { get; init; } = 40;
 }
 
+/// <summary>Supplies the current <see cref="ScanOptions"/> so settings changes apply to the next scan without restarting.</summary>
+public interface IScanOptionsProvider
+{
+    ScanOptions Current { get; }
+}
+
+/// <summary>Fixed options, for tests and for hosts without a settings store.</summary>
+public sealed class StaticScanOptionsProvider : IScanOptionsProvider
+{
+    public StaticScanOptionsProvider(ScanOptions options)
+    {
+        Current = options ?? throw new ArgumentNullException(nameof(options));
+    }
+
+    public ScanOptions Current { get; }
+}
+
 /// <summary>Second-stage size computation (§32). Runs in the background after discovery.</summary>
 public interface IDirectorySizeCalculator
 {

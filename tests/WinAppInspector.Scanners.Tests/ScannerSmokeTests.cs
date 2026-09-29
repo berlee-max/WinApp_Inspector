@@ -110,7 +110,7 @@ public class ScannerSmokeTests
     {
         var folders = Folders;
         var options = ScanOptions.Default with { DirectoryRoots = new HashSet<ScanRoot> { ScanRoot.ProgramFiles, ScanRoot.LocalAppData } };
-        var scanner = new DirectoryScanner(folders, new ProtectedPathRule(folders), options, NullLogger<DirectoryScanner>.Instance);
+        var scanner = new DirectoryScanner(folders, new ProtectedPathRule(folders), new StaticScanOptionsProvider(options), NullLogger<DirectoryScanner>.Instance);
 
         var result = await scanner.ScanAsync(null, CancellationToken.None);
 

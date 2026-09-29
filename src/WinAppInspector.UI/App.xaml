@@ -1,6 +1,9 @@
 <Application x:Class="WinAppInspector.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WinAppInspector.UI.ViewModels"
+             xmlns:views="clr-namespace:WinAppInspector.UI.Views"
+             xmlns:conv="clr-namespace:WinAppInspector.UI.Converters"
              ShutdownMode="OnMainWindowClose">
   <Application.Resources>
     <ResourceDictionary>
@@ -8,6 +11,27 @@
         <ResourceDictionary Source="Resources/Strings.zh-CN.xaml" />
         <ResourceDictionary Source="Resources/Theme.xaml" />
       </ResourceDictionary.MergedDictionaries>
+
+      <conv:EnumTextConverter x:Key="EnumText" />
+      <conv:BytesConverter x:Key="Bytes" />
+      <conv:EmptyToCollapsedConverter x:Key="EmptyToCollapsed" />
+      <conv:ReasonTextConverter x:Key="ReasonText" />
+      <conv:ReasonMarkConverter x:Key="ReasonMark" />
+      <conv:EvidenceTextConverter x:Key="EvidenceText" />
+      <conv:DirectoryRoleConverter x:Key="DirectoryRoleText" />
+      <conv:StatusToneBrushConverter x:Key="StatusToneBrush" />
+      <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+      <!-- Page view models → views -->
+      <DataTemplate DataType="{x:Type vm:OverviewViewModel}">
+        <views:OverviewView />
+      </DataTemplate>
+      <DataTemplate DataType="{x:Type vm:ScanViewModel}">
+        <views:ScanView />
+      </DataTemplate>
+      <DataTemplate DataType="{x:Type vm:UninstallViewModel}">
+        <views:UninstallView />
+      </DataTemplate>
     </ResourceDictionary>
   </Application.Resources>
 </Application>
