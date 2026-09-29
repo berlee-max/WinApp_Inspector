@@ -37,6 +37,15 @@ tests/WinAppInspector.Analysis.Tests    跨平台单元测试
 tests/WinAppInspector.Scanners.Tests    Windows 冒烟测试（[WindowsFact]，非 Windows 上自动跳过）
 ```
 
+## 下载与运行
+
+[Releases](https://github.com/berlee-max/WinApp_Inspector/releases) 提供两种 win-x64 包：
+
+- `WinAppInspector-<版本>-win-x64.zip`：自包含单文件 exe，解压即用，不需要安装 .NET（推荐）。
+- `WinAppInspector-<版本>-win-x64-framework-dependent.zip`：体积小，需要 .NET 8 Desktop Runtime。
+
+要求 Windows 10 1809 及以上。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"。发布由 `.github/workflows/release.yml` 完成：推送 `v*` 标签，或在 Actions 里手动运行并填写版本号（生成预发布）。
+
 ## 构建与测试
 
 需要 .NET 8 SDK（Microsoft 官方构建；Ubuntu 自带的 SDK 缺少 WPF 支持）。整个解决方案可以在 Windows、macOS、Linux 上编译；只能在 Windows 上运行。
