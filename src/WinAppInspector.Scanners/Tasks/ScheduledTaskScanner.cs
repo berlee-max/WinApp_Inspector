@@ -64,7 +64,11 @@ public sealed class ScheduledTaskScanner : IScanner<ScheduledTaskRecord>
         var triggers = definition.Triggers.Count == 0 ? null : string.Join("; ", definition.Triggers.Select(t => t.ToString(System.Globalization.CultureInfo.InvariantCulture)));
         var author = definition.RegistrationInfo.Author;
         var state = task.State.ToString();
-        var folder = WindowsPath.GetDirectoryName(task.Path) ?? "\\";
+        var folder = WindowsPath.GetDirectoryName(task.Path);
+        if (string.IsNullOrEmpty(folder))
+        {
+            folder = "\\";
+        }
 
         var execActions = definition.Actions.OfType<ExecAction>().ToArray();
         if (execActions.Length == 0)

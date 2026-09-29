@@ -11,6 +11,8 @@ namespace WinAppInspector.Scanners.Executables;
 /// Verifies the embedded Authenticode signature with <c>WinVerifyTrust</c> and reads the signer certificate (§7.4).
 /// Files signed only through a security catalog (most Windows system binaries) report <see cref="SignatureStatus.NotSigned"/>
 /// with an explanatory <see cref="SignatureInfo.Error"/>; catalog lookup is out of scope for V1.
+/// <see cref="SignatureInfo.Publisher"/> is the subject's O attribute, falling back to the CN, so that it can be
+/// compared with the registry publisher (§10.2).
 /// </summary>
 public sealed class SignatureReader : ISignatureReader
 {
@@ -56,9 +58,12 @@ public sealed class SignatureReader : ISignatureReader
             {
                 SubjectName = certificate.Subject,
                 IssuerName = certificate.Issuer,
-                Publisher = certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false) is { Length: > 0 } cn
-                    ? cn
-                    : DistinguishedName.GetCommonName(certificate.Subject),
+                // The organisation is the legal entity behind the signature (e.g. "Microsoft Corporation" for the
+                // ".NET" certificate); the CN is only a fallback for certificates that name no organisation.
+                Publisher = DistinguishedName.GetOrganization(certificate.Subject)
+                    ?? (certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false) is { Length: > 0 } cn
+                        ? cn
+                        : DistinguishedName.GetCommonName(certificate.Subject)),
                 Thumbprint = certificate.Thumbprint,
                 NotBefore = new DateTimeOffset(certificate.NotBefore.ToUniversalTime(), TimeSpan.Zero),
                 NotAfter = new DateTimeOffset(certificate.NotAfter.ToUniversalTime(), TimeSpan.Zero),
