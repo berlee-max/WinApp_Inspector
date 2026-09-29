@@ -143,7 +143,7 @@ jobs:
 
             | 文件 | 说明 |
             |---|---|
-            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-portable.zip` | **便携版**。解压得到一个文件夹，运行里面的 `WinAppInspector.exe`；不需要安装 .NET。根目录只有启动器和 `app\`、`runtime\` 两个子目录，运行时带完整的 .NET 8 桌面运行时（WPF 无法裁剪），解压后约 150 MB。 |
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-portable.zip` | **便携版**。解压得到一个文件夹，运行里面的 `WinAppInspector.exe`；不需要安装 .NET。根目录只有启动器和 `app\`、`runtime\` 两个子目录，运行时带完整的 .NET 8 桌面运行时（WPF 无法裁剪），解压后约 190 MB。 |
             | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-lite.zip` | **精简版**，单个 exe 约 8 MB。需要已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)（没装时 exe 会提示下载）。 |
             | `SHA256SUMS.txt` | 校验和。 |
 
