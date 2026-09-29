@@ -6,7 +6,9 @@ using Microsoft.Extensions.Logging;
 using WinAppInspector.Actions;
 using WinAppInspector.Analysis;
 using WinAppInspector.Core;
+using WinAppInspector.Core.Scanning;
 using WinAppInspector.Scanners;
+using WinAppInspector.UI.Services;
 using WinAppInspector.UI.ViewModels;
 using WinAppInspector.UI.Views;
 
@@ -17,7 +19,7 @@ public partial class App : Application
 {
     private IHost? _host;
 
-    /// <summary>Folder for logs and cached scan results, next to the user's local app data (§25, §33).</summary>
+    /// <summary>Folder for logs, settings and cached scan results, under the user's local app data (§25, §33).</summary>
     public static string DataDirectory { get; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "WinAppInspector");
@@ -36,12 +38,23 @@ public partial class App : Application
             })
             .ConfigureServices(services =>
             {
+                services.AddSingleton(sp => new SettingsService(DataDirectory, sp.GetRequiredService<ILogger<SettingsService>>()));
+                services.AddSingleton<IScanOptionsProvider>(sp => sp.GetRequiredService<SettingsService>());
+
                 services.AddWinAppInspectorCore();
                 services.AddWinAppInspectorAnalysis();
                 services.AddWinAppInspectorScanners();
                 services.AddWinAppInspectorActions();
 
+                services.AddSingleton<IScanService, ScanService>();
+                services.AddSingleton<IconService>();
+
+                services.AddSingleton<DetailViewModel>();
+                services.AddSingleton<OverviewViewModel>();
+                services.AddSingleton<ScanViewModel>();
+                services.AddSingleton<UninstallViewModel>();
                 services.AddSingleton<MainViewModel>();
+                services.AddTransient<SettingsViewModel>();
                 services.AddSingleton<MainWindow>();
             })
             .Build();

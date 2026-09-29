@@ -20,7 +20,7 @@ public static class ScannersServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddSingleton(ScanOptions.Default);
+        services.TryAddSingleton<IScanOptionsProvider>(new StaticScanOptionsProvider(ScanOptions.Default));
 
         services.AddSingleton<IExecutableMetadataReader, ExeMetadataReader>();
         services.AddSingleton<ISignatureReader, SignatureReader>();

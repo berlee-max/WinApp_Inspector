@@ -23,10 +23,10 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
 
     private readonly WindowsKnownFolders _folders;
     private readonly ProtectedPathRule _protectedPaths;
-    private readonly ScanOptions _options;
+    private readonly IScanOptionsProvider _options;
     private readonly ILogger<DirectoryScanner> _logger;
 
-    public DirectoryScanner(WindowsKnownFolders folders, ProtectedPathRule protectedPaths, ScanOptions options, ILogger<DirectoryScanner> logger)
+    public DirectoryScanner(WindowsKnownFolders folders, ProtectedPathRule protectedPaths, IScanOptionsProvider options, ILogger<DirectoryScanner> logger)
     {
         _folders = folders;
         _protectedPaths = protectedPaths;
@@ -51,7 +51,7 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
         var items = new List<AppDirectory>();
         var errors = new List<ScanError>();
 
-        foreach (var root in _options.DirectoryRoots.OrderBy(r => (int)r))
+        foreach (var root in _options.Current.DirectoryRoots.OrderBy(r => (int)r))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var rootPath = _folders.PathOf(root);
@@ -122,7 +122,7 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
     private AppDirectory Describe(DirectoryInfo dir, ScanRoot root, CancellationToken cancellationToken)
     {
         var executables = new List<string>();
-        CollectExecutables(dir, _options.ExecutableSearchDepth, executables, cancellationToken);
+        CollectExecutables(dir, _options.Current.ExecutableSearchDepth, executables, cancellationToken);
 
         var childNames = new List<string>();
         int? fileCount = null;
@@ -151,7 +151,7 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
 
     private void CollectExecutables(DirectoryInfo dir, int depth, List<string> sink, CancellationToken cancellationToken)
     {
-        if (depth <= 0 || sink.Count >= _options.MaxExecutablesPerDirectory)
+        if (depth <= 0 || sink.Count >= _options.Current.MaxExecutablesPerDirectory)
         {
             return;
         }
@@ -160,7 +160,7 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
 
         foreach (var file in dir.EnumerateFiles("*.exe", ChildOptions))
         {
-            if (sink.Count >= _options.MaxExecutablesPerDirectory)
+            if (sink.Count >= _options.Current.MaxExecutablesPerDirectory)
             {
                 return;
             }
@@ -176,7 +176,7 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
         foreach (var child in dir.EnumerateDirectories("*", ChildOptions))
         {
             CollectExecutables(child, depth - 1, sink, cancellationToken);
-            if (sink.Count >= _options.MaxExecutablesPerDirectory)
+            if (sink.Count >= _options.Current.MaxExecutablesPerDirectory)
             {
                 return;
             }
