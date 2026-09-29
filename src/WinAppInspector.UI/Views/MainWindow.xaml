@@ -8,93 +8,31 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
         Title="{StaticResource App.Title}"
-        Width="1320" Height="820" MinWidth="1000" MinHeight="600"
+        Width="1240" Height="800" MinWidth="960" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Brush.WindowBackground}"
         FontFamily="{StaticResource Font.UI}"
         UseLayoutRounding="True" SnapsToDevicePixels="True">
 
   <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
 
-    <Grid Grid.Row="0">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="220" />
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-      </Grid.ColumnDefinitions>
+    <!-- Hero (home / scanning / summary) and manager share the window; only one is visible. -->
+    <views:HomeView Grid.Column="0" Grid.ColumnSpan="2" Visibility="{Binding IsHeroVisible, Converter={StaticResource BoolToVisibility}}" />
+    <views:ManagerView Grid.Column="0" Visibility="{Binding IsManager, Converter={StaticResource BoolToVisibility}}" />
 
-      <!-- Left navigation (§12) -->
-      <Border Grid.Column="0" Background="{StaticResource Brush.WindowBackground}" Padding="8,16">
-        <DockPanel>
-          <StackPanel DockPanel.Dock="Top" Margin="12,0,12,20">
-            <TextBlock Text="{StaticResource App.Title}" Style="{StaticResource Text.Title}" />
-            <TextBlock Text="{StaticResource App.Tagline}" Style="{StaticResource Text.Caption}" Margin="0,4,0,0" />
-          </StackPanel>
-
-          <StackPanel DockPanel.Dock="Top">
-            <RadioButton Style="{StaticResource Nav.Button}" GroupName="Nav"
-                         Content="{StaticResource Nav.Overview}"
-                         IsChecked="{Binding IsOverviewSelected, Mode=TwoWay}" />
-            <RadioButton Style="{StaticResource Nav.Button}" GroupName="Nav"
-                         Content="{StaticResource Nav.Scan}"
-                         IsChecked="{Binding IsScanSelected, Mode=TwoWay}" />
-            <RadioButton Style="{StaticResource Nav.Button}" GroupName="Nav"
-                         Content="{StaticResource Nav.Uninstall}"
-                         IsChecked="{Binding IsUninstallSelected, Mode=TwoWay}" />
-          </StackPanel>
-
-          <TextBlock DockPanel.Dock="Bottom" VerticalAlignment="Bottom" Margin="12,0"
-                     Text="{StaticResource Placeholder.Boundary}" Style="{StaticResource Text.Caption}" />
-        </DockPanel>
-      </Border>
-
-      <!-- Content -->
-      <Grid Grid.Column="1" Margin="0,16,16,16">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <!-- Top-right actions (§12) -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,12">
-          <TextBlock Text="{Binding LastScanText}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Rescan}"
-                  Command="{Binding RescanCommand}"
-                  Visibility="{Binding IsScanning, Converter={StaticResource EmptyToCollapsed}, ConverterParameter=invert}" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.CancelScan}"
-                  Command="{Binding CancelScanCommand}"
-                  Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.Settings}" Command="{Binding OpenSettingsCommand}" />
-          <Button Style="{StaticResource Toolbar.Button}" Content="{StaticResource Nav.About}" Command="{Binding OpenAboutCommand}" />
-        </StackPanel>
-
-        <ContentControl Grid.Row="1" Content="{Binding CurrentPageViewModel}" Focusable="False" />
-      </Grid>
-
-      <!-- Right detail panel (§14) -->
-      <Border Grid.Column="2" Style="{StaticResource Detail.Panel}" Width="400"
-              Visibility="{Binding Detail.HasSelection, Converter={StaticResource BoolToVisibility}}">
-        <views:DetailPanel DataContext="{Binding Detail}" />
-      </Border>
-    </Grid>
-
-    <!-- Status bar -->
-    <Border Grid.Row="1" Style="{StaticResource Status.Bar}">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="220" />
-        </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="0" Text="{Binding StatusText}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
-        <ProgressBar Grid.Column="1" Style="{StaticResource Progress.Thin}" VerticalAlignment="Center"
-                     Value="{Binding Scan.ProgressValue, Mode=OneWay}" IsIndeterminate="{Binding Scan.ProgressIndeterminate}"
-                     Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}" />
-      </Grid>
+    <!-- Detail panel (§14), only in the manager -->
+    <Border Grid.Column="1" Style="{StaticResource Detail.Panel}" Width="420">
+      <Border.Visibility>
+        <MultiBinding Converter="{StaticResource AllTrueToVisibility}">
+          <Binding Path="IsManager" />
+          <Binding Path="Detail.HasSelection" />
+        </MultiBinding>
+      </Border.Visibility>
+      <views:DetailPanel DataContext="{Binding Detail}" />
     </Border>
   </Grid>
 </Window>

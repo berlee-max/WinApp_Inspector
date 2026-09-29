@@ -1,0 +1,151 @@
+<UserControl x:Class="WinAppInspector.UI.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:WinAppInspector.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
+
+  <!-- The hero page: home → scanning → summary. Dark gradient, white text, one big round action button. -->
+  <Grid Background="{StaticResource Hero.Background}">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Top bar: title left, quiet links right -->
+    <Grid Grid.Row="0" Margin="32,20,32,0">
+      <TextBlock Text="{StaticResource App.Title}" Style="{StaticResource Hero.Caption}" HorizontalAlignment="Left" FontWeight="SemiBold" />
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button Style="{StaticResource Hero.Link}" Content="{StaticResource Nav.Settings}" Command="{Binding OpenSettingsCommand}" />
+        <Button Style="{StaticResource Hero.Link}" Content="{StaticResource Nav.OperationLog}" Command="{Binding OpenOperationLogCommand}" />
+        <Button Style="{StaticResource Hero.Link}" Content="{StaticResource Nav.About}" Command="{Binding OpenAboutCommand}" />
+      </StackPanel>
+    </Grid>
+
+    <!-- Centre -->
+    <Grid Grid.Row="1" Margin="48,24">
+      <!-- HOME: what this does -->
+      <Grid Visibility="{Binding IsHome, Converter={StaticResource BoolToVisibility}}" MaxWidth="900" VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="1.3*" />
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Style="{StaticResource Hero.Emblem}" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="W" Style="{StaticResource Hero.EmblemText}" />
+        </Border>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="32,0,0,0">
+          <TextBlock Text="{StaticResource Home.Title}" Style="{StaticResource Hero.Title}" />
+          <TextBlock Text="{StaticResource Home.Subtitle}" Style="{StaticResource Hero.Body}" Margin="0,12,0,28" />
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+            <Border Style="{StaticResource Hero.Bullet}"><TextBlock Text="✕" Style="{StaticResource Hero.BulletText}" /></Border>
+            <TextBlock Text="{StaticResource Home.Feature1}" Style="{StaticResource Hero.Feature}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+            <Border Style="{StaticResource Hero.Bullet}"><TextBlock Text="▶" Style="{StaticResource Hero.BulletText}" /></Border>
+            <TextBlock Text="{StaticResource Home.Feature2}" Style="{StaticResource Hero.Feature}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <Border Style="{StaticResource Hero.Bullet}"><TextBlock Text="◌" Style="{StaticResource Hero.BulletText}" /></Border>
+            <TextBlock Text="{StaticResource Home.Feature3}" Style="{StaticResource Hero.Feature}" />
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- SCANNING -->
+      <StackPanel Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="720">
+        <Border Style="{StaticResource Hero.Emblem}" HorizontalAlignment="Center" Margin="0,0,0,36">
+          <TextBlock Text="W" Style="{StaticResource Hero.EmblemText}" />
+        </Border>
+        <TextBlock Text="{StaticResource Scanning.Title}" Style="{StaticResource Hero.Title}" HorizontalAlignment="Center" TextAlignment="Center" />
+        <TextBlock Text="{Binding ScanStageText}" Style="{StaticResource Hero.Body}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,12,0,4" />
+        <TextBlock Text="{Binding ScanDetailText}" Style="{StaticResource Hero.Caption}" HorizontalAlignment="Center" TextAlignment="Center"
+                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="640" />
+        <ProgressBar Style="{StaticResource Hero.Progress}" Width="360" Margin="0,20,0,0"
+                     Value="{Binding ProgressValue, Mode=OneWay}" IsIndeterminate="{Binding ProgressIndeterminate}" />
+      </StackPanel>
+
+      <!-- SUMMARY -->
+      <Grid Visibility="{Binding IsSummary, Converter={StaticResource BoolToVisibility}}" MaxWidth="1040" VerticalAlignment="Center">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,36">
+          <TextBlock Style="{StaticResource Hero.Title}" HorizontalAlignment="Center" TextAlignment="Center">
+            <Run Text="{StaticResource Summary.FoundPrefix}" /><Run Text="{Binding TotalApps, Mode=OneWay}" FontWeight="Bold" /><Run Text="{StaticResource Summary.FoundSuffix}" />
+          </TextBlock>
+          <TextBlock Text="{Binding LastScanText}" Style="{StaticResource Hero.Caption}" HorizontalAlignment="Center" Margin="0,8,0,20" />
+          <Button Style="{StaticResource Hero.Secondary}" Content="{StaticResource Summary.Manage}" Command="{Binding OpenManagerCommand}" HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <UniformGrid Grid.Row="1" Columns="3">
+          <Border Style="{StaticResource Hero.Card}">
+            <DockPanel>
+              <Button DockPanel.Dock="Bottom" Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.View}"
+                      Command="{Binding OpenManagerCommand}" CommandParameter="Running" HorizontalAlignment="Right" />
+              <StackPanel>
+                <TextBlock Style="{StaticResource Hero.CardTitle}">
+                  <Run Text="{Binding RunningCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.RunningTitle}" />
+                </TextBlock>
+                <TextBlock Style="{StaticResource Hero.CardBody}">
+                  <Run Text="{StaticResource Summary.RunningBodyPrefix}" /><Run Text="{Binding PortableRunningCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.RunningBodySuffix}" />
+                </TextBlock>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+          <Border Style="{StaticResource Hero.Card}">
+            <DockPanel>
+              <Button DockPanel.Dock="Bottom" Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.Inspect}"
+                      Command="{Binding OpenManagerCommand}" CommandParameter="Residue" HorizontalAlignment="Right" />
+              <StackPanel>
+                <TextBlock Style="{StaticResource Hero.CardTitle}">
+                  <Run Text="{Binding ResidueCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.ResidueTitle}" />
+                </TextBlock>
+                <TextBlock Style="{StaticResource Hero.CardBody}">
+                  <Run Text="{StaticResource Summary.ResidueBodyPrefix}" /><Run Text="{Binding ResidueSizeText, Mode=OneWay}" /><Run Text="{StaticResource Summary.ResidueBodySuffix}" />
+                </TextBlock>
+              </StackPanel>
+            </DockPanel>
+          </Border>
+          <Border Style="{StaticResource Hero.Card}">
+            <DockPanel>
+              <Button DockPanel.Dock="Bottom" Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.View}"
+                      Command="{Binding OpenManagerCommand}" CommandParameter="Undetermined" HorizontalAlignment="Right" />
+              <StackPanel>
+                <TextBlock Style="{StaticResource Hero.CardTitle}">
+                  <Run Text="{Binding UndeterminedCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.UndeterminedTitle}" />
+                </TextBlock>
+                <TextBlock Text="{StaticResource Summary.UndeterminedBody}" Style="{StaticResource Hero.CardBody}" />
+              </StackPanel>
+            </DockPanel>
+          </Border>
+        </UniformGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+          <Button Style="{StaticResource Hero.Link}" Command="{Binding ShowErrorsCommand}"
+                  Visibility="{Binding HasErrors, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock>
+              <Run Text="{StaticResource Scan.Errors}" /><Run Text=" (" /><Run Text="{Binding ErrorCount, Mode=OneWay}" /><Run Text=")" />
+            </TextBlock>
+          </Button>
+          <Button Style="{StaticResource Hero.Link}" Content="{StaticResource Manager.AnalyzeFolder}" Command="{Binding AnalyzeFolderCommand}" />
+          <Button Style="{StaticResource Hero.Link}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <!-- Bottom: the one big button -->
+    <Grid Grid.Row="2" Height="150">
+      <Button Style="{StaticResource Hero.Round}" Content="{StaticResource Home.Scan}" Command="{Binding StartScanCommand}"
+              Visibility="{Binding IsHome, Converter={StaticResource BoolToVisibility}}" />
+      <Button Style="{StaticResource Hero.Round}" Content="{StaticResource Scanning.Stop}" Command="{Binding CancelScanCommand}"
+              Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibility}}" />
+      <Button Style="{StaticResource Hero.Round}" Content="{StaticResource Summary.Rescan}" Command="{Binding StartScanCommand}"
+              Visibility="{Binding IsSummary, Converter={StaticResource BoolToVisibility}}" />
+    </Grid>
+  </Grid>
+</UserControl>

@@ -10,15 +10,16 @@ using WinAppInspector.UI.Services;
 
 namespace WinAppInspector.UI.ViewModels;
 
-/// <summary>The three top-level pages (§12).</summary>
-public enum MainPage
+/// <summary>What the window shows: the start page, the scan in progress, the result summary, or the app manager.</summary>
+public enum ShellStage
 {
-    Overview = 0,
-    Scan = 1,
-    Uninstall = 2,
+    Home = 0,
+    Scanning = 1,
+    Summary = 2,
+    Manager = 3,
 }
 
-/// <summary>Shell view model: navigation, the top-right actions, and the scan lifecycle shared by all pages.</summary>
+/// <summary>Shell view model: stage, the scan lifecycle, the result summary and the bulk actions shared by the two pages.</summary>
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IScanService _scanService;
@@ -27,30 +28,68 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly ScanCache _cache;
     private readonly IDialogService _dialogs;
     private readonly ILogger<MainViewModel> _logger;
+    private readonly Dictionary<string, ApplicationItemViewModel> _itemsById = new(StringComparer.OrdinalIgnoreCase);
     private string? _pendingAnalyzePath;
     private DateTimeOffset? _lastScanTime;
     private CancellationTokenSource? _scanCts;
     private CancellationTokenSource? _sizeCts;
     private ScanSnapshot? _lastSnapshot;
-    private readonly Dictionary<string, ApplicationItemViewModel> _itemsById = new(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyList<ScanError> _lastErrors = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CurrentPageViewModel))]
-    [NotifyPropertyChangedFor(nameof(IsOverviewSelected))]
-    [NotifyPropertyChangedFor(nameof(IsScanSelected))]
-    [NotifyPropertyChangedFor(nameof(IsUninstallSelected))]
-    private MainPage _currentPage = MainPage.Overview;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RescanCommand))]
+    [NotifyPropertyChangedFor(nameof(IsHome))]
+    [NotifyPropertyChangedFor(nameof(IsScanning))]
+    [NotifyPropertyChangedFor(nameof(IsSummary))]
+    [NotifyPropertyChangedFor(nameof(IsManager))]
+    [NotifyPropertyChangedFor(nameof(IsHeroVisible))]
+    [NotifyCanExecuteChangedFor(nameof(StartScanCommand))]
     [NotifyCanExecuteChangedFor(nameof(CancelScanCommand))]
-    private bool _isScanning;
+    [NotifyCanExecuteChangedFor(nameof(OpenManagerCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UninstallCheckedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(UninstallCurrentCommand))]
+    private ShellStage _stage = ShellStage.Home;
+
+    // Scan progress (hero page)
+    [ObservableProperty]
+    private string _scanStageText = string.Empty;
 
     [ObservableProperty]
-    private string _statusText = string.Empty;
+    private string _scanDetailText = string.Empty;
+
+    [ObservableProperty]
+    private double _progressValue;
+
+    [ObservableProperty]
+    private bool _progressIndeterminate = true;
+
+    // Summary (hero page after a scan)
+    [ObservableProperty]
+    private int _totalApps;
+
+    [ObservableProperty]
+    private int _runningCount;
+
+    [ObservableProperty]
+    private int _portableRunningCount;
+
+    [ObservableProperty]
+    private int _residueCount;
+
+    [ObservableProperty]
+    private string _residueSizeText = string.Empty;
+
+    [ObservableProperty]
+    private int _undeterminedCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasErrors))]
+    private int _errorCount;
 
     [ObservableProperty]
     private string _lastScanText = string.Empty;
+
+    [ObservableProperty]
+    private string _statusText = string.Empty;
 
     public MainViewModel(
         IScanService scanService,
@@ -58,9 +97,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         SettingsService settings,
         ScanCache cache,
         IDialogService dialogs,
-        OverviewViewModel overview,
-        ScanViewModel scan,
-        UninstallViewModel uninstall,
+        AppManagerViewModel manager,
+        UninstallFlowViewModel uninstall,
         DetailViewModel detail,
         ILogger<MainViewModel> logger)
     {
@@ -69,64 +107,77 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _settings = settings;
         _cache = cache;
         _dialogs = dialogs;
-        Overview = overview;
-        Scan = scan;
-        Uninstall = uninstall;
+        Manager = manager;
+        UninstallFlow = uninstall;
         Detail = detail;
         _logger = logger;
 
-        Overview.ShowSystemComponents = !settings.Current.HideSystemComponents;
-        Scan.ScanRequested += (_, _) => RescanCommand.Execute(null);
-        Scan.AnalyzeFolderRequested += (_, path) => _ = AnalyzeFolderAsync(path);
-        Uninstall.RescanRequested += (_, _) =>
+        Manager.ShowSystemComponents = !settings.Current.HideSystemComponents;
+        UninstallFlow.Completed += (_, _) =>
         {
-            if (RescanCommand.CanExecute(null))
+            if (StartScanCommand.CanExecute(null))
             {
-                RescanCommand.Execute(null);
+                StartScanCommand.Execute(null);
             }
         };
-        StatusText = Localize.Get("Status.Idle");
+        UninstallFlow.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(UninstallFlowViewModel.IsBusy) or nameof(UninstallFlowViewModel.BusyText))
+            {
+                StatusText = UninstallFlow.IsBusy ? UninstallFlow.BusyText : string.Empty;
+                UninstallCheckedCommand.NotifyCanExecuteChanged();
+                UninstallCurrentCommand.NotifyCanExecuteChanged();
+                StartScanCommand.NotifyCanExecuteChanged();
+            }
+        };
+        Manager.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppManagerViewModel.CheckedCount))
+            {
+                UninstallCheckedCommand.NotifyCanExecuteChanged();
+            }
+        };
+        Detail.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DetailViewModel.Current))
+            {
+                UninstallCurrentCommand.NotifyCanExecuteChanged();
+            }
+        };
     }
 
-    public OverviewViewModel Overview { get; }
-    public ScanViewModel Scan { get; }
-    public UninstallViewModel Uninstall { get; }
+    public AppManagerViewModel Manager { get; }
+    public UninstallFlowViewModel UninstallFlow { get; }
     public DetailViewModel Detail { get; }
 
-    public object CurrentPageViewModel => CurrentPage switch
-    {
-        MainPage.Scan => Scan,
-        MainPage.Uninstall => Uninstall,
-        _ => Overview,
-    };
+    public bool IsHome => Stage == ShellStage.Home;
+    public bool IsScanning => Stage == ShellStage.Scanning;
+    public bool IsSummary => Stage == ShellStage.Summary;
+    public bool IsManager => Stage == ShellStage.Manager;
 
-    public bool IsOverviewSelected
-    {
-        get => CurrentPage == MainPage.Overview;
-        set => SelectPage(MainPage.Overview, value);
-    }
+    /// <summary>The hero (dark) page hosts home, scanning and summary; the manager is the light page.</summary>
+    public bool IsHeroVisible => Stage != ShellStage.Manager;
 
-    public bool IsScanSelected
-    {
-        get => CurrentPage == MainPage.Scan;
-        set => SelectPage(MainPage.Scan, value);
-    }
+    public bool HasErrors => ErrorCount > 0;
 
-    public bool IsUninstallSelected
-    {
-        get => CurrentPage == MainPage.Uninstall;
-        set => SelectPage(MainPage.Uninstall, value);
-    }
+    public bool HasResults => _itemsById.Count > 0;
 
     /// <summary>Raised when the settings dialog should be shown; the window owns dialog creation.</summary>
     public event EventHandler? SettingsRequested;
 
     public event EventHandler? AboutRequested;
 
-    /// <summary>§19: a path handed over by the Explorer context menu; analysed once the first scan has finished.</summary>
-    public void RequestAnalyzeOnStartup(string path) => _pendingAnalyzePath = path;
+    /// <summary>§19: a path handed over by the Explorer context menu; analysed once a scan has finished.</summary>
+    public void RequestAnalyzeOnStartup(string path)
+    {
+        _pendingAnalyzePath = path;
+        if (StartScanCommand.CanExecute(null))
+        {
+            StartScanCommand.Execute(null);
+        }
+    }
 
-    /// <summary>§31/§33: show the previous results immediately while the fresh scan runs.</summary>
+    /// <summary>§33: show the previous results immediately; the user decides when to rescan.</summary>
     public async Task LoadCacheAsync()
     {
         var cached = await _cache.LoadAsync(CancellationToken.None);
@@ -137,7 +188,99 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         LoadResults(cached.Applications, []);
         _lastScanTime = cached.ScanTime;
-        LastScanText = Localize.Format("Status.CachedScanFormat", cached.ScanTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture));
+        LastScanText = Localize.Format("Status.CachedScanFormat", FormatTime(cached.ScanTime));
+        Stage = ShellStage.Summary;
+    }
+
+    // ---- Navigation ----------------------------------------------------------------------------------------------
+
+    [RelayCommand(CanExecute = nameof(CanOpenManager))]
+    private void OpenManager(string? category)
+    {
+        if (category is not null && Enum.TryParse<CategoryKind>(category, out var kind))
+        {
+            var target = Manager.PrimaryCategories.Concat(Manager.SourceCategories).FirstOrDefault(c => c.Kind == kind);
+            if (target is not null)
+            {
+                Manager.SelectCategoryCommand.Execute(target);
+            }
+        }
+
+        Stage = ShellStage.Manager;
+    }
+
+    private bool CanOpenManager() => HasResults && Stage != ShellStage.Scanning;
+
+    [RelayCommand]
+    private void BackToSummary()
+    {
+        Detail.Current = null;
+        Stage = HasResults ? ShellStage.Summary : ShellStage.Home;
+    }
+
+    [RelayCommand]
+    private void OpenSettings() => SettingsRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
+    private void OpenAbout() => AboutRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
+    private void OpenOperationLog() => _dialogs.ShowOperationLog();
+
+    [RelayCommand]
+    private void ShowErrors()
+    {
+        if (_lastErrors.Count == 0)
+        {
+            return;
+        }
+
+        var lines = _lastErrors.Take(40).Select(e => $"{e.Source}: {e.Target}  —  {ScanErrorRow.From(e).Text}");
+        _dialogs.Info(Localize.Get("Scan.Errors"), Localize.Format("Scan.ErrorsFormat", _lastErrors.Count), string.Join(Environment.NewLine, lines));
+    }
+
+    /// <summary>Called by the window after the settings dialog closes with Save.</summary>
+    public void SettingsSaved()
+    {
+        Manager.ShowSystemComponents = !_settings.Current.HideSystemComponents;
+        Manager.RefreshCounts();
+    }
+
+    // ---- Actions -------------------------------------------------------------------------------------------------
+
+    [RelayCommand(CanExecute = nameof(CanUninstallChecked))]
+    private async Task UninstallCheckedAsync()
+    {
+        var items = Manager.CheckedItems;
+        if (items.Count == 0)
+        {
+            return;
+        }
+
+        await UninstallFlow.RunAsync(items);
+    }
+
+    private bool CanUninstallChecked() => Manager.CheckedCount > 0 && !UninstallFlow.IsBusy && Stage == ShellStage.Manager;
+
+    [RelayCommand(CanExecute = nameof(CanUninstallCurrent))]
+    private async Task UninstallCurrentAsync()
+    {
+        if (Detail.Current is { } item)
+        {
+            await UninstallFlow.RunAsync([item]);
+        }
+    }
+
+    private bool CanUninstallCurrent() => Detail.Current is { IsActionable: true } && !UninstallFlow.IsBusy;
+
+    [RelayCommand]
+    private void AnalyzeFolder()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog { Title = Localize.Get("Manager.AnalyzeFolder") };
+        if (dialog.ShowDialog() == true)
+        {
+            _ = AnalyzeFolderAsync(dialog.FolderName);
+        }
     }
 
     [RelayCommand]
@@ -191,8 +334,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Export what the user sees: the current filter and search, sorted as displayed.
-            var visible = Overview.View.Cast<ApplicationItemViewModel>().Select(i => i.Entity).ToList();
+            // Export what the user sees in the manager (category, search, sort); from the summary page, everything listed.
+            var visible = Stage == ShellStage.Manager
+                ? Manager.View.Cast<ApplicationItemViewModel>().Select(i => i.Entity).ToList()
+                : _itemsById.Values.Where(i => !i.IsSystemLike).Select(i => i.Entity).ToList();
             var content = ReportExporter.Export(visible, format, labels, _lastScanTime ?? DateTimeOffset.Now);
             System.IO.File.WriteAllText(dialog.FileName, content, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             StatusText = Localize.Format("Export.DoneFormat", visible.Count, dialog.FileName);
@@ -203,24 +348,39 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanRescan))]
-    private async Task RescanAsync()
+    // ---- Scan lifecycle ------------------------------------------------------------------------------------------
+
+    [RelayCommand(CanExecute = nameof(CanStartScan))]
+    private async Task StartScanAsync()
     {
-        if (IsScanning)
+        if (Stage == ShellStage.Scanning)
         {
             return;
         }
 
         _sizeCts?.Cancel();
         _scanCts = new CancellationTokenSource();
-        IsScanning = true;
-        Scan.BeginScan();
-        StatusText = Localize.Get("Status.Scanning");
+        Detail.Current = null;
+        Stage = ShellStage.Scanning;
+        ProgressIndeterminate = true;
+        ProgressValue = 0;
+        ScanStageText = Localize.Get("Status.Scanning");
+        ScanDetailText = string.Empty;
+        StatusText = string.Empty;
 
         var progress = new Progress<ScanProgress>(p =>
         {
-            Scan.Report(p);
-            StatusText = string.IsNullOrEmpty(p.CurrentItem) ? Localize.Stage(p.Stage) : $"{Localize.Stage(p.Stage)} — {p.CurrentItem}";
+            ScanStageText = Localize.Stage(p.Stage);
+            ScanDetailText = p.CurrentItem ?? string.Empty;
+            if (p.Completed is { } done && p.Total is { } total && total > 0)
+            {
+                ProgressIndeterminate = false;
+                ProgressValue = 100.0 * done / total;
+            }
+            else
+            {
+                ProgressIndeterminate = true;
+            }
         });
 
         try
@@ -229,57 +389,43 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _lastSnapshot = outcome.Snapshot;
             _lastScanTime = outcome.Snapshot.ScanTime;
             LoadResults(outcome.Resolution.Applications, outcome.Snapshot.Errors);
-            var r = outcome.Resolution;
-            Scan.SetUnattributed(r.OrphanProcesses, r.OrphanStartupItems, r.OrphanServices, r.OrphanScheduledTasks);
-            LastScanText = Localize.Format("Status.LastScanFormat", outcome.Snapshot.ScanTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture));
-            StatusText = Localize.Format("Status.ScanDoneFormat", outcome.Resolution.Applications.Count, outcome.Snapshot.Errors.Count);
+            LastScanText = Localize.Format("Status.LastScanFormat", FormatTime(outcome.Snapshot.ScanTime));
+            Stage = ShellStage.Summary;
             _ = ComputeSizesAsync(outcome.Resolution.Applications);
 
             if (_pendingAnalyzePath is { } pending)
             {
                 _pendingAnalyzePath = null;
-                CurrentPage = MainPage.Scan;
+                Stage = ShellStage.Manager;
                 await AnalyzeFolderAsync(System.IO.File.Exists(pending) ? System.IO.Path.GetDirectoryName(pending) ?? pending : pending);
             }
         }
         catch (OperationCanceledException)
         {
             StatusText = Localize.Get("Status.Cancelled");
-            Scan.EndScan(_itemsById.Values.ToArray(), []);
+            Stage = HasResults ? ShellStage.Summary : ShellStage.Home;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             // §34: show the concrete cause.
             _logger.LogError(ex, "Scan failed");
-            StatusText = Localize.Format("Status.ScanFailedFormat", ex.Message);
-            Scan.EndScan(_itemsById.Values.ToArray(), [new ScanError("Scan", string.Empty, ex.Message, ex)]);
+            Stage = HasResults ? ShellStage.Summary : ShellStage.Home;
+            _dialogs.Warn(Localize.Get("Home.Scan"), Localize.Get("Status.ScanFailed"), ex.Message);
         }
         finally
         {
-            IsScanning = false;
             _scanCts.Dispose();
             _scanCts = null;
+            OpenManagerCommand.NotifyCanExecuteChanged();
         }
     }
 
-    private bool CanRescan() => !IsScanning;
+    private bool CanStartScan() => Stage != ShellStage.Scanning && !UninstallFlow.IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanCancelScan))]
     private void CancelScan() => _scanCts?.Cancel();
 
-    private bool CanCancelScan() => IsScanning;
-
-    [RelayCommand]
-    private void OpenSettings() => SettingsRequested?.Invoke(this, EventArgs.Empty);
-
-    [RelayCommand]
-    private void OpenAbout() => AboutRequested?.Invoke(this, EventArgs.Empty);
-
-    /// <summary>Called by the window after the settings dialog closes with Save.</summary>
-    public void SettingsSaved()
-    {
-        Overview.ShowSystemComponents = !_settings.Current.HideSystemComponents;
-    }
+    private bool CanCancelScan() => Stage == ShellStage.Scanning;
 
     private void LoadResults(IReadOnlyList<ApplicationEntity> applications, IReadOnlyList<ScanError> errors)
     {
@@ -290,25 +436,41 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _itemsById[item.Id] = item;
         }
 
-        Overview.Load(items);
-        Uninstall.Load(items);
-        Scan.EndScan(items, errors);
+        Manager.Load(items);
+        _lastErrors = errors;
+        ErrorCount = errors.Count;
+        RefreshSummary();
+        OnPropertyChanged(nameof(HasResults));
+        OpenManagerCommand.NotifyCanExecuteChanged();
+    }
+
+    private void RefreshSummary()
+    {
+        var items = _itemsById.Values.ToList();
+        TotalApps = items.Count(i => !i.IsSystemLike && i.AppType != AppType.Undetermined && !i.IsIdlePortable);
+        RunningCount = items.Count(i => i.IsRunning && !i.IsSystemLike);
+        PortableRunningCount = items.Count(i => i.IsRunning && i.AppType == AppType.Portable);
+        var residue = items.Where(i => i.AppType == AppType.SuspectedResidue).ToList();
+        ResidueCount = residue.Count;
+        ResidueSizeText = residue.Any(i => i.Entity.DiskUsageBytes is not null)
+            ? Localize.Bytes(residue.Sum(i => i.Entity.DiskUsageBytes ?? 0))
+            : Localize.Get("Size.Pending");
+        UndeterminedCount = items.Count(i => i.AppType == AppType.Undetermined);
     }
 
     private async Task ComputeSizesAsync(IReadOnlyList<ApplicationEntity> applications)
     {
         _sizeCts = new CancellationTokenSource();
         var token = _sizeCts.Token;
-        var progress = new Progress<ScanProgress>(Scan.Report);
         var pending = new Dictionary<string, Dictionary<string, long>>(StringComparer.OrdinalIgnoreCase);
 
         try
         {
-            await _scanService.ComputeSizesAsync(applications, OnSize, progress, token);
+            await _scanService.ComputeSizesAsync(applications, OnSize, null, token);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                Scan.MarkSizesDone();
-                Overview.RefreshStats();
+                Manager.RefreshCounts();
+                RefreshSummary();
             });
             var withSizes = Application.Current.Dispatcher.Invoke(() => _itemsById.Values.Select(i => i.Entity).ToList());
             await _cache.SaveAsync(new CachedScan(_lastScanTime ?? DateTimeOffset.Now, withSizes), CancellationToken.None);
@@ -375,8 +537,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            var item = new ApplicationItemViewModel(entity, _icons);
-            Detail.Current = item;
+            Stage = ShellStage.Manager;
+            Detail.Current = new ApplicationItemViewModel(entity, _icons);
             StatusText = Localize.Format("Status.AnalyzedFormat", path, Localize.AppType(entity.AppType));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -386,13 +548,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void SelectPage(MainPage page, bool selected)
-    {
-        if (selected)
-        {
-            CurrentPage = page;
-        }
-    }
+    private static string FormatTime(DateTimeOffset time) => time.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
 
     public void Dispose()
     {

@@ -5,27 +5,15 @@
   <!-- All user-facing text lives here (Simplified Chinese). Keys are English identifiers. -->
 
   <sys:String x:Key="App.Title">WinApp Inspector</sys:String>
-  <sys:String x:Key="App.Tagline">看清电脑里到底装了什么、这些文件属于谁、应该怎么卸载</sys:String>
   <sys:String x:Key="App.Version">版本 0.1.0（预览）</sys:String>
   <sys:String x:Key="App.AboutText">WinApp Inspector 不是"垃圾清理工具"，而是一款帮助用户看清 Windows 电脑里"到底装了什么、这些文件属于谁、应该怎么卸载"的程序发现与卸载分析工具。所有删除操作都必须先展示证据、由您确认后才会执行。</sys:String>
 
   <!-- §12 navigation -->
-  <sys:String x:Key="Nav.Overview">软件总览</sys:String>
-  <sys:String x:Key="Nav.Scan">程序扫描</sys:String>
-  <sys:String x:Key="Nav.Uninstall">卸载与清理</sys:String>
-  <sys:String x:Key="Nav.Rescan">重新扫描</sys:String>
-  <sys:String x:Key="Nav.CancelScan">停止扫描</sys:String>
   <sys:String x:Key="Nav.Export">导出报告</sys:String>
   <sys:String x:Key="Nav.Settings">设置</sys:String>
   <sys:String x:Key="Nav.About">关于</sys:String>
 
   <!-- §13.1 statistics -->
-  <sys:String x:Key="Stats.Identified">已识别应用</sys:String>
-  <sys:String x:Key="Stats.ThirdParty">第三方程序</sys:String>
-  <sys:String x:Key="Stats.Portable">便携应用</sys:String>
-  <sys:String x:Key="Stats.Residue">疑似残留</sys:String>
-  <sys:String x:Key="Stats.System">系统组件</sys:String>
-  <sys:String x:Key="Stats.Undetermined">待判断</sys:String>
 
   <!-- §13.2 columns -->
   <sys:String x:Key="Column.Name">软件名称</sys:String>
@@ -35,30 +23,11 @@
   <sys:String x:Key="Column.InstallLocation">安装位置</sys:String>
   <sys:String x:Key="Column.DiskUsage">磁盘占用</sys:String>
   <sys:String x:Key="Column.Status">状态</sys:String>
-  <sys:String x:Key="Column.Folder">文件夹</sys:String>
-  <sys:String x:Key="Column.Owner">归属程序</sys:String>
-  <sys:String x:Key="Column.Size">大小</sys:String>
-  <sys:String x:Key="Column.MainExecutable">主程序</sys:String>
-  <sys:String x:Key="Column.Registered">注册记录</sys:String>
   <sys:String x:Key="Column.Running">运行状态</sys:String>
-  <sys:String x:Key="Column.Verdict">判断</sys:String>
   <sys:String x:Key="Column.UninstallMethod">卸载方式</sys:String>
 
   <!-- §13.3 filters -->
-  <sys:String x:Key="Filter.All">全部</sys:String>
-  <sys:String x:Key="Filter.ThirdParty">第三方</sys:String>
-  <sys:String x:Key="Filter.Microsoft">Microsoft</sys:String>
-  <sys:String x:Key="Filter.Portable">便携程序</sys:String>
-  <sys:String x:Key="Filter.UserLevel">用户级程序</sys:String>
-  <sys:String x:Key="Filter.Residue">疑似残留</sys:String>
-  <sys:String x:Key="Filter.Driver">驱动组件</sys:String>
-  <sys:String x:Key="Filter.Runtime">运行库</sys:String>
-  <sys:String x:Key="Filter.Undetermined">待判断</sys:String>
-  <sys:String x:Key="Filter.Store">商店应用</sys:String>
-  <sys:String x:Key="Filter.ShowSystem">显示系统组件</sys:String>
   <sys:String x:Key="Search.Placeholder">搜索软件名、发布者、文件夹、EXE、路径…</sys:String>
-  <sys:String x:Key="Overview.CountFormat">显示 {0} 项</sys:String>
-  <sys:String x:Key="Overview.Empty">尚未扫描。点击右上角"重新扫描"或前往"程序扫描"页面开始。</sys:String>
 
   <!-- §9 application types -->
   <sys:String x:Key="AppType.Undetermined">待判断</sys:String>
@@ -75,14 +44,10 @@
   <!-- §13.2 / §30 status -->
   <sys:String x:Key="Status.Normal">正常</sys:String>
   <sys:String x:Key="Status.Running">运行中</sys:String>
-  <sys:String x:Key="Status.NotRunning">未运行</sys:String>
   <sys:String x:Key="Status.Residue">残留</sys:String>
   <sys:String x:Key="Status.Undetermined">待判断</sys:String>
-  <sys:String x:Key="Status.Idle">就绪</sys:String>
   <sys:String x:Key="Status.Scanning">正在扫描…</sys:String>
   <sys:String x:Key="Status.Cancelled">扫描已取消</sys:String>
-  <sys:String x:Key="Status.ScanDoneFormat">扫描完成：识别 {0} 个应用实体，{1} 个读取错误</sys:String>
-  <sys:String x:Key="Status.ScanFailedFormat">扫描失败：{0}</sys:String>
   <sys:String x:Key="Status.LastScanFormat">上次扫描：{0}</sys:String>
   <sys:String x:Key="Status.CachedScanFormat">上次扫描：{0}（缓存结果，正在重新扫描）</sys:String>
   <sys:String x:Key="Status.AnalyzingFormat">正在分析 {0}…</sys:String>
@@ -145,54 +110,22 @@
   <sys:String x:Key="Stage.sizes">正在后台计算空间占用</sys:String>
 
   <!-- §15–18 scan page -->
-  <sys:String x:Key="Scan.Start">开始扫描</sys:String>
-  <sys:String x:Key="Scan.AnalyzeFolder">分析此文件夹…</sys:String>
-  <sys:String x:Key="Scan.Intro">发现 Geek 等卸载器看不到的程序：扫描 Program Files、Program Files (x86)、ProgramData、AppData\Local、AppData\Roaming、AppData\LocalLow 以及设置中添加的自定义目录，并与注册表、进程、服务、启动项、计划任务建立归属关系。</sys:String>
-  <sys:String x:Key="Scan.Unattributed">未归属的运行项</sys:String>
-  <sys:String x:Key="Scan.UnattributedHint">这些进程、启动项、服务和计划任务指向的程序不在任何已发现的目录里：要么目标文件已不存在（通常是卸载残留），要么位于扫描范围之外（如绿色软件）。对仍存在的文件夹可以分析，或在设置中加入扫描范围。这里不提供删除。</sys:String>
-  <sys:String x:Key="Unattributed.Missing">目标文件已不存在（可能是卸载残留）</sys:String>
-  <sys:String x:Key="Unattributed.OutOfScope">位于扫描范围之外</sys:String>
-  <sys:String x:Key="Column.Reason">原因</sys:String>
   <sys:String x:Key="ScanError.CustomDirectoryMissing">自定义扫描目录不存在（可能是已断开的磁盘）</sys:String>
   <sys:String x:Key="ScanError.CustomDirectoryProtected">已跳过自定义扫描目录：{0}</sys:String>
   <sys:String x:Key="ScanError.CustomDirectoryLooksLikeProgram">这个自定义目录本身就包含程序文件，看起来是单个程序而不是程序集合；请用"分析此文件夹"查看它，或改为添加它的上级目录</sys:String>
-  <sys:String x:Key="Scan.AnalyzeItemFolder">分析所在文件夹</sys:String>
-  <sys:String x:Key="Unattributed.Process">运行中进程</sys:String>
-  <sys:String x:Key="Unattributed.StartupItem">启动项</sys:String>
-  <sys:String x:Key="Unattributed.Service">服务</sys:String>
-  <sys:String x:Key="Unattributed.ScheduledTask">计划任务</sys:String>
-  <sys:String x:Key="Unattributed.PidsFormat">PID {0}</sys:String>
-  <sys:String x:Key="Column.Kind">类型</sys:String>
-  <sys:String x:Key="Column.ItemName">名称</sys:String>
-  <sys:String x:Key="Column.Path">路径</sys:String>
-  <sys:String x:Key="Column.Detail">说明</sys:String>
-  <sys:String x:Key="Scan.Progress">扫描进度</sys:String>
-  <sys:String x:Key="Scan.Results">扫描结果</sys:String>
   <sys:String x:Key="Scan.Errors">读取错误</sys:String>
-  <sys:String x:Key="Scan.SummaryFormat">共 {0} 个目录，当前显示 {1} 个</sys:String>
-  <sys:String x:Key="ScanCategory.All">全部</sys:String>
-  <sys:String x:Key="ScanCategory.Registered">已识别程序</sys:String>
-  <sys:String x:Key="ScanCategory.Unregistered">未注册程序</sys:String>
-  <sys:String x:Key="ScanCategory.Portable">疑似绿色软件</sys:String>
-  <sys:String x:Key="ScanCategory.Residue">疑似残留</sys:String>
-  <sys:String x:Key="ScanCategory.Unknown">未知目录</sys:String>
 
   <!-- §20–22 uninstall page -->
-  <sys:String x:Key="Uninstall.Intro">优先调用软件自己的卸载程序。只有不存在官方卸载方式时，才进入手动清理流程；任何删除都需要您逐项确认。</sys:String>
-  <sys:String x:Key="Uninstall.Official">可标准卸载</sys:String>
-  <sys:String x:Key="Uninstall.Manual">无卸载器 / 残留（需手动移除）</sys:String>
   <sys:String x:Key="Uninstall.Action">卸载</sys:String>
   <sys:String x:Key="Uninstall.ManualAction">手动移除…</sys:String>
   <sys:String x:Key="Uninstall.RunningFormat">{0} 正在运行（{1} 个进程）：</sys:String>
   <sys:String x:Key="Uninstall.RunningChoices">是 = 结束这些进程后继续；否 = 不结束进程，直接调用卸载程序；取消 = 放弃卸载。</sys:String>
   <sys:String x:Key="Uninstall.TerminatingFormat">正在结束进程 {0}…</sys:String>
   <sys:String x:Key="Uninstall.TerminateFailedFormat">无法结束进程 {0}</sys:String>
-  <sys:String x:Key="Uninstall.ConfirmFormat">即将调用 {0} 的官方卸载程序（{1}）。</sys:String>
   <sys:String x:Key="Uninstall.SaveDataHint">卸载前请先保存该程序中的数据。卸载程序本身可能会请求管理员权限。</sys:String>
   <sys:String x:Key="Uninstall.CreatingRestorePoint">正在创建系统还原点…</sys:String>
   <sys:String x:Key="Uninstall.RestorePointFailed">无法创建系统还原点。是否仍然继续卸载？</sys:String>
   <sys:String x:Key="Uninstall.RunningUninstallerFormat">正在运行 {0} 的卸载程序，请在卸载程序窗口中完成操作…</sys:String>
-  <sys:String x:Key="Uninstall.CancelledByUser">卸载已在卸载程序中取消。</sys:String>
   <sys:String x:Key="Uninstall.FailedFormat">{0} 的卸载程序未成功完成。</sys:String>
   <sys:String x:Key="Uninstall.CheckResidueAnyway">是否仍然检查残留？（部分卸载程序会在后台继续运行，稍后重新扫描可能得到不同结果。）</sys:String>
   <sys:String x:Key="Uninstall.RestartRequired">卸载完成，但需要重新启动电脑才能全部生效。</sys:String>
@@ -394,6 +327,74 @@
   <sys:String x:Key="Settings.Cancel">取消</sys:String>
   <sys:String x:Key="Settings.RescanHint">扫描范围的更改在下次扫描时生效。</sys:String>
 
+
+  <!-- Shell: hero page (home / scanning / summary) and manager -->
+  <sys:String x:Key="Nav.Settings">设置</sys:String>
+  <sys:String x:Key="Nav.OperationLog">操作记录</sys:String>
+  <sys:String x:Key="Nav.About">关于</sys:String>
+  <sys:String x:Key="Nav.Export">导出报告</sys:String>
+  <sys:String x:Key="Home.Title">应用管理</sys:String>
+  <sys:String x:Key="Home.Subtitle">看清电脑里到底装了什么、哪些正在运行、卸载后留下了什么，再决定怎么处理。</sys:String>
+  <sys:String x:Key="Home.Feature1">卸载应用程序：优先调用官方卸载程序</sys:String>
+  <sys:String x:Key="Home.Feature2">后台运行的第三方程序，包括没有安装记录的绿色软件</sys:String>
+  <sys:String x:Key="Home.Feature3">应用残留清理：逐项确认，默认进回收站</sys:String>
+  <sys:String x:Key="Home.Scan">扫描</sys:String>
+  <sys:String x:Key="Scanning.Title">正在扫描应用程序…</sys:String>
+  <sys:String x:Key="Scanning.Stop">停止</sys:String>
+  <sys:String x:Key="Summary.FoundPrefix">在这台电脑上找到了 </sys:String>
+  <sys:String x:Key="Summary.FoundSuffix"> 个应用程序。</sys:String>
+  <sys:String x:Key="Summary.Manage">管理我的应用程序</sys:String>
+  <sys:String x:Key="Summary.Rescan">重新扫描</sys:String>
+  <sys:String x:Key="Summary.View">查看</sys:String>
+  <sys:String x:Key="Summary.Inspect">检查</sys:String>
+  <sys:String x:Key="Summary.RunningTitle"> 个第三方程序正在运行</sys:String>
+  <sys:String x:Key="Summary.RunningBodyPrefix">其中 </sys:String>
+  <sys:String x:Key="Summary.RunningBodySuffix"> 个没有安装记录（绿色软件或从其它位置启动）。可以在这里看到它们从哪里运行。</sys:String>
+  <sys:String x:Key="Summary.ResidueTitle"> 项疑似残留</sys:String>
+  <sys:String x:Key="Summary.ResidueBodyPrefix">约 </sys:String>
+  <sys:String x:Key="Summary.ResidueBodySuffix">。长期未变动、只剩缓存或日志、且没有程序引用的文件夹；逐项确认后可移除。</sys:String>
+  <sys:String x:Key="Summary.UndeterminedTitle"> 个待判断目录</sys:String>
+  <sys:String x:Key="Summary.UndeterminedBody">最近还在变动、找不到归属的文件夹。这里只展示依据，不提供删除。</sys:String>
+  <sys:String x:Key="Scan.Errors">读取错误</sys:String>
+  <sys:String x:Key="Scan.ErrorsFormat">扫描过程中有 {0} 处无法读取（不影响其它结果）：</sys:String>
+  <sys:String x:Key="Status.Scanning">正在准备扫描…</sys:String>
+  <sys:String x:Key="Status.ScanFailed">扫描没有完成。</sys:String>
+  <sys:String x:Key="Manager.Title">应用程序管理器</sys:String>
+  <sys:String x:Key="Manager.Back">← 返回</sys:String>
+  <sys:String x:Key="Manager.SortBy">排序方式</sys:String>
+  <sys:String x:Key="Manager.AnalyzeFolder">分析文件夹…</sys:String>
+  <sys:String x:Key="Manager.SectionApps">卸载程序</sys:String>
+  <sys:String x:Key="Manager.SectionAppsHint">正确地移除整个应用程序及其关联文件。</sys:String>
+  <sys:String x:Key="Manager.SectionSource">来源</sys:String>
+  <sys:String x:Key="Manager.SectionVendor">提供商</sys:String>
+  <sys:String x:Key="Manager.CountSuffix"> 项</sys:String>
+  <sys:String x:Key="Manager.CheckAll">全选当前列表</sys:String>
+  <sys:String x:Key="Manager.UncheckAll">取消全选</sys:String>
+  <sys:String x:Key="Manager.NothingChecked">未勾选任何应用程序</sys:String>
+  <sys:String x:Key="Manager.CheckedFormat">已勾选 {0} 个应用程序 ｜ {1}</sys:String>
+  <sys:String x:Key="Manager.UninstallChecked">卸载</sys:String>
+  <sys:String x:Key="Category.All">所有应用程序</sys:String>
+  <sys:String x:Key="Category.Running">正在运行</sys:String>
+  <sys:String x:Key="Category.Portable">绿色 / 便携</sys:String>
+  <sys:String x:Key="Category.Residue">疑似残留</sys:String>
+  <sys:String x:Key="Category.Undetermined">待判断</sys:String>
+  <sys:String x:Key="Category.Checked">已勾选</sys:String>
+  <sys:String x:Key="Category.Store">商店应用</sys:String>
+  <sys:String x:Key="Category.Installed">安装程序</sys:String>
+  <sys:String x:Key="Category.System">系统组件</sys:String>
+  <sys:String x:Key="Sort.Name">名称</sys:String>
+  <sys:String x:Key="Sort.Size">大小</sys:String>
+  <sys:String x:Key="Sort.Date">安装日期</sys:String>
+  <sys:String x:Key="Source.Store">商店应用</sys:String>
+  <sys:String x:Key="Source.Installed">安装程序</sys:String>
+  <sys:String x:Key="Source.Portable">绿色 / 便携</sys:String>
+  <sys:String x:Key="Source.Residue">残留</sys:String>
+  <sys:String x:Key="Source.Other">其它</sys:String>
+  <sys:String x:Key="Uninstall.ConfirmManyFormat">将处理 {0} 个应用程序。有官方卸载程序的会运行下面列出的命令；没有的会进入手动移除清单。</sys:String>
+  <sys:String x:Key="Uninstall.CancelledByUserFormat">{0} 的卸载已被取消。</sys:String>
+  <sys:String x:Key="Uninstall.NothingActionable">勾选的项目都是系统组件、驱动或共享运行库，本工具不提供删除。</sys:String>
+  <sys:String x:Key="Uninstall.BatchSummaryFormat">{1} 个应用程序中 {0} 个已处理完成。</sys:String>
+
   <!-- Generic values -->
   <sys:String x:Key="Value.Unknown">未知</sys:String>
   <sys:String x:Key="Value.None">无</sys:String>
@@ -403,8 +404,8 @@
   <sys:String x:Key="Size.Pending">计算中…</sys:String>
   <sys:String x:Key="Size.RegistryEstimate">（注册表估算）</sys:String>
   <sys:String x:Key="About.Close">关闭</sys:String>
+  <sys:String x:Key="Placeholder.Boundary">发现程序 → 识别程序 → 解释依据 → 查看详情 → 调用官方卸载 → 识别明确残留 → 用户确认后清理</sys:String>
 
   <!-- Boundary reminder (§48) -->
-  <sys:String x:Key="Placeholder.Boundary">发现程序 → 识别程序 → 解释依据 → 查看详情 → 调用官方卸载 → 识别明确残留 → 用户确认后清理</sys:String>
 
 </ResourceDictionary>
