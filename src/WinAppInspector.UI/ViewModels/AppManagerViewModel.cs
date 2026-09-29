@@ -331,7 +331,7 @@ public sealed partial class AppManagerViewModel : ObservableObject
     }
 
     /// <summary>The main list: real applications. System pieces, undecided folders and idle portable folders live in their own categories.</summary>
-    private bool IsListed(ApplicationItemViewModel item)
+    public bool IsListed(ApplicationItemViewModel item)
     {
         if (item.IsSystemLike)
         {

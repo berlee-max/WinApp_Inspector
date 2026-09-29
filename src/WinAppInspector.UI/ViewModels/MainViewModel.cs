@@ -254,6 +254,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         Manager.ShowSystemComponents = !_settings.Current.HideSystemComponents;
         Manager.RefreshCounts();
+        RefreshSummary();
     }
 
     // ---- Actions -------------------------------------------------------------------------------------------------
@@ -467,7 +468,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void RefreshSummary()
     {
         var items = _itemsById.Values.ToList();
-        TotalApps = items.Count(i => !i.IsSystemLike && i.AppType != AppType.Undetermined && !i.IsIdlePortable);
+        TotalApps = items.Count(Manager.IsListed); // the same rule as the sidebar's 所有应用程序
         RunningCount = items.Count(i => i.IsRunning && !i.IsSystemLike);
         PortableRunningCount = items.Count(i => i.IsRunning && i.AppType == AppType.Portable);
         var residue = items.Where(i => i.AppType == AppType.SuspectedResidue).ToList();

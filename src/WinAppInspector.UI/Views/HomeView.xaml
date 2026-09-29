@@ -72,8 +72,10 @@
                  TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="640" Opacity="0.7" />
     </StackPanel>
 
-    <!-- SUMMARY -->
-    <Grid Visibility="{Binding IsSummary, Converter={StaticResource BoolToVisibility}}" Margin="18,64,18,70">
+    <!-- SUMMARY (scrolls rather than clips when the window is at its minimum height) -->
+    <ScrollViewer Visibility="{Binding IsSummary, Converter={StaticResource BoolToVisibility}}" Margin="18,64,18,70"
+                  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent">
+    <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
@@ -87,7 +89,7 @@
         <Button Style="{StaticResource Hero.Secondary}" Content="{StaticResource Summary.Manage}" Command="{Binding OpenManagerCommand}" HorizontalAlignment="Center" />
       </StackPanel>
 
-      <Grid Grid.Row="1" MaxWidth="1120" MaxHeight="440" VerticalAlignment="Top">
+      <Grid Grid.Row="1" MaxWidth="1120" VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="0.95*" />
           <ColumnDefinition Width="2.05*" />
@@ -95,7 +97,12 @@
         <!-- left: what is running right now -->
         <Border Grid.Column="0" Style="{StaticResource Hero.Card}">
           <Grid>
-            <StackPanel>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" MinHeight="96" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0">
               <TextBlock Style="{StaticResource Hero.CardTitle}">
                 <Run Text="{StaticResource Summary.RunningPrefix}" /><Run Text="{Binding RunningCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.RunningTitle}" />
               </TextBlock>
@@ -103,10 +110,10 @@
                 <Run Text="{StaticResource Summary.RunningBodyPrefix}" /><Run Text="{Binding PortableRunningCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.RunningBodySuffix}" />
               </TextBlock>
             </StackPanel>
-            <Border Style="{StaticResource Hero.BigTile}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,44">
+            <Border Grid.Row="1" Style="{StaticResource Hero.BigTile}" HorizontalAlignment="Center" VerticalAlignment="Center">
               <Path Style="{StaticResource Hero.BulletIcon}" Width="30" Height="30" Stretch="Uniform" Data="M8,5 L19,12 L8,19 Z" />
             </Border>
-            <Button Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.Inspect}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+            <Button Grid.Row="2" Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.Inspect}" HorizontalAlignment="Right"
                     Command="{Binding OpenManagerCommand}" CommandParameter="Running" />
           </Grid>
         </Border>
@@ -115,16 +122,17 @@
           <Grid.RowDefinitions><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
           <Border Grid.Row="0" Style="{StaticResource Hero.Card}">
             <Grid>
-              <StackPanel Margin="0,0,80,0">
+              <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+              <StackPanel Grid.Row="0" Margin="0,0,80,8">
                 <TextBlock Style="{StaticResource Hero.CardTitle}">
                   <Run Text="{StaticResource Summary.ResiduePrefix}" /><Run Text="{Binding ResidueCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.ResidueTitle}" /><Run Text="{Binding ResidueSizeText, Mode=OneWay}" />
                 </TextBlock>
                 <TextBlock Text="{StaticResource Summary.ResidueBody}" Style="{StaticResource Hero.CardBody}" />
               </StackPanel>
-              <Border Style="{StaticResource Hero.CornerTile}" HorizontalAlignment="Right" VerticalAlignment="Top">
+              <Border Grid.Row="0" Style="{StaticResource Hero.CornerTile}" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <TextBlock Text="✦" Style="{StaticResource Hero.CornerTileText}" />
               </Border>
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+              <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.Inspect}" Command="{Binding OpenManagerCommand}" CommandParameter="Residue" />
                 <Button Style="{StaticResource Hero.CardButtonPrimary}" Content="{StaticResource Summary.Remove}" Command="{Binding RemoveResidueCommand}" Margin="8,0,0,0" />
               </StackPanel>
@@ -132,16 +140,17 @@
           </Border>
           <Border Grid.Row="1" Style="{StaticResource Hero.Card}">
             <Grid>
-              <StackPanel Margin="0,0,80,0">
+              <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+              <StackPanel Grid.Row="0" Margin="0,0,80,8">
                 <TextBlock Style="{StaticResource Hero.CardTitle}">
                   <Run Text="{StaticResource Summary.UndeterminedPrefix}" /><Run Text="{Binding UndeterminedCount, Mode=OneWay}" /><Run Text="{StaticResource Summary.UndeterminedTitle}" />
                 </TextBlock>
                 <TextBlock Text="{StaticResource Summary.UndeterminedBody}" Style="{StaticResource Hero.CardBody}" />
               </StackPanel>
-              <Border Style="{StaticResource Hero.CornerTile}" HorizontalAlignment="Right" VerticalAlignment="Top">
+              <Border Grid.Row="0" Style="{StaticResource Hero.CornerTile}" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <TextBlock Text="?" Style="{StaticResource Hero.CornerTileText}" />
               </Border>
-              <Button Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.View}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+              <Button Grid.Row="1" Style="{StaticResource Hero.CardButton}" Content="{StaticResource Summary.View}" HorizontalAlignment="Right"
                       Command="{Binding OpenManagerCommand}" CommandParameter="Undetermined" />
             </Grid>
           </Border>
@@ -156,6 +165,7 @@
         <Button Style="{StaticResource Hero.Link}" Content="{StaticResource Nav.Export}" Command="{Binding ExportReportCommand}" />
       </StackPanel>
     </Grid>
+    </ScrollViewer>
 
     <!-- Bottom band with the one big button -->
     <Border VerticalAlignment="Bottom" Height="50" Background="#21041232" BorderBrush="#14FFFFFF" BorderThickness="0,1,0,0"

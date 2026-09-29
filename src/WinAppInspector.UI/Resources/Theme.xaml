@@ -460,7 +460,7 @@
     <Setter Property="CornerRadius" Value="16" />
     <Setter Property="Padding" Value="22,20" />
     <Setter Property="Margin" Value="8" />
-    <Setter Property="MinHeight" Value="150" />
+    <Setter Property="MinHeight" Value="118" />
   </Style>
   <Style x:Key="Hero.CardTitle" TargetType="TextBlock">
     <Setter Property="FontFamily" Value="{StaticResource Font.UI}" />
@@ -743,17 +743,41 @@
     <Setter Property="Background" Value="#FFFFFF" />
     <Setter Property="Foreground" Value="#15346B" />
     <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="Root" CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="#FFFFFF" BorderThickness="1" Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Root" Property="Background" Value="#E6EEF9" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <!-- Manager shell inside the dark page -->
+  <!-- The shell itself carries no Effect: an Effect renders the whole subtree (list, text) through an intermediate
+       surface, which drops ClearType and re-blurs on every hover or scroll. The shadow lives on an empty sibling. -->
   <Style x:Key="Manager.Shell" TargetType="Border">
-    <Setter Property="Margin" Value="7" />
+    <Setter Property="Margin" Value="10" />
     <Setter Property="CornerRadius" Value="18" />
     <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
     <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style x:Key="Manager.ShellShadow" TargetType="Border">
+    <Setter Property="Margin" Value="10" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
     <Setter Property="Effect">
       <Setter.Value>
-        <DropShadowEffect Color="#00103C" BlurRadius="60" ShadowDepth="24" Opacity="0.4" />
+        <DropShadowEffect Color="#00103C" BlurRadius="28" ShadowDepth="8" Opacity="0.45" />
       </Setter.Value>
     </Setter>
   </Style>

@@ -28,6 +28,7 @@
 
   <!-- The manager sits as a rounded light shell inside the dark gradient. -->
   <Grid Background="{StaticResource Hero.Background}">
+    <Border Style="{StaticResource Manager.ShellShadow}" />
     <Border Style="{StaticResource Manager.Shell}">
       <Grid>
         <Grid.RowDefinitions>
@@ -63,7 +64,7 @@
         <Grid Grid.Row="1" Background="{StaticResource Brush.Surface}">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="272" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" MinWidth="500" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
 
@@ -106,9 +107,9 @@
                     <Grid.ColumnDefinitions>
                       <ColumnDefinition Width="36" />
                       <ColumnDefinition Width="56" />
-                      <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="124" />
-                      <ColumnDefinition Width="92" />
+                      <ColumnDefinition Width="*" MinWidth="160" />
+                      <ColumnDefinition Width="Auto" MinWidth="88" />
+                      <ColumnDefinition Width="Auto" MinWidth="72" />
                       <ColumnDefinition Width="36" />
                     </Grid.ColumnDefinitions>
                     <CheckBox Grid.Column="0" Style="{StaticResource Check.Row}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsActionable}" />
@@ -123,8 +124,8 @@
                       <TextBlock Text="{Binding SubtitleText}" Style="{StaticResource Text.CellSecondary}" FontSize="11.5" Margin="0,3,0,0"
                                  Foreground="{Binding StatusTone, Converter={StaticResource StatusToneBrush}}" />
                     </StackPanel>
-                    <TextBlock Grid.Column="3" Text="{Binding InstallDateText}" Style="{StaticResource Text.CellSecondary}" FontSize="12" />
-                    <TextBlock Grid.Column="4" Text="{Binding DiskUsageText}" Style="{StaticResource Text.CellSecondary}" FontSize="12" />
+                    <TextBlock Grid.Column="3" Text="{Binding InstallDateText}" Style="{StaticResource Text.CellSecondary}" FontSize="12" Margin="0,0,16,0" />
+                    <TextBlock Grid.Column="4" Text="{Binding DiskUsageText}" Style="{StaticResource Text.CellSecondary}" FontSize="12" Margin="0,0,8,0" />
                     <Button Grid.Column="5" Style="{StaticResource Link.Button}" Content="›" FontSize="25" FontWeight="Light" HorizontalAlignment="Center"
                             Command="{Binding DataContext.Manager.ShowDetailCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}" />
@@ -135,7 +136,8 @@
           </Grid>
 
           <!-- Detail panel (§14) -->
-          <Border Grid.Column="2" Style="{StaticResource Detail.Panel}" Width="400"
+          <!-- The detail panel yields width before the list does: it is capped, never fixed. -->
+          <Border Grid.Column="2" Style="{StaticResource Detail.Panel}" MaxWidth="400" MinWidth="280"
                   Visibility="{Binding Detail.HasSelection, Converter={StaticResource BoolToVisibility}}">
             <views:DetailPanel DataContext="{Binding Detail}" />
           </Border>
