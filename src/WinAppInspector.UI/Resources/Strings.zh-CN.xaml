@@ -163,7 +163,69 @@
   <sys:String x:Key="Uninstall.Manual">无卸载器 / 残留（需手动移除）</sys:String>
   <sys:String x:Key="Uninstall.Action">卸载</sys:String>
   <sys:String x:Key="Uninstall.ManualAction">手动移除…</sys:String>
-  <sys:String x:Key="Uninstall.NotYet">卸载与清理动作将在下一阶段启用；当前可查看每个程序的卸载方式与关联项。</sys:String>
+  <sys:String x:Key="Uninstall.RunningFormat">{0} 正在运行（{1} 个进程）：</sys:String>
+  <sys:String x:Key="Uninstall.RunningChoices">是 = 结束这些进程后继续；否 = 不结束进程，直接调用卸载程序；取消 = 放弃卸载。</sys:String>
+  <sys:String x:Key="Uninstall.TerminatingFormat">正在结束进程 {0}…</sys:String>
+  <sys:String x:Key="Uninstall.TerminateFailedFormat">无法结束进程 {0}</sys:String>
+  <sys:String x:Key="Uninstall.ConfirmFormat">即将调用 {0} 的官方卸载程序（{1}）。</sys:String>
+  <sys:String x:Key="Uninstall.SaveDataHint">卸载前请先保存该程序中的数据。卸载程序本身可能会请求管理员权限。</sys:String>
+  <sys:String x:Key="Uninstall.CreatingRestorePoint">正在创建系统还原点…</sys:String>
+  <sys:String x:Key="Uninstall.RestorePointFailed">无法创建系统还原点。是否仍然继续卸载？</sys:String>
+  <sys:String x:Key="Uninstall.RunningUninstallerFormat">正在运行 {0} 的卸载程序，请在卸载程序窗口中完成操作…</sys:String>
+  <sys:String x:Key="Uninstall.CancelledByUser">卸载已在卸载程序中取消。</sys:String>
+  <sys:String x:Key="Uninstall.FailedFormat">{0} 的卸载程序未成功完成。</sys:String>
+  <sys:String x:Key="Uninstall.CheckResidueAnyway">是否仍然检查残留？（部分卸载程序会在后台继续运行，稍后重新扫描可能得到不同结果。）</sys:String>
+  <sys:String x:Key="Uninstall.RestartRequired">卸载完成，但需要重新启动电脑才能全部生效。</sys:String>
+  <sys:String x:Key="Uninstall.ScanningResidueFormat">正在重新扫描 {0} 的残留…</sys:String>
+  <sys:String x:Key="Uninstall.NoResidueFormat">卸载完成。未发现 {0} 的明确残留。</sys:String>
+
+  <!-- §21–§24 cleanup checklist -->
+  <sys:String x:Key="Cleanup.TitleAfterUninstall">卸载完成 — {0} 的残留</sys:String>
+  <sys:String x:Key="Cleanup.TitleManual">即将移除：{0}</sys:String>
+  <sys:String x:Key="Cleanup.Intro">以下项目按判断属于该软件。请逐项确认后再移除；灰色项目被安全规则拒绝，无法选择。</sys:String>
+  <sys:String x:Key="Cleanup.Nothing">没有可移除的项目。</sys:String>
+  <sys:String x:Key="Cleanup.NothingFormat">未发现 {0} 的可移除项目。</sys:String>
+  <sys:String x:Key="Cleanup.PermanentTag">此操作将永久删除</sys:String>
+  <sys:String x:Key="Cleanup.ElevationTag">需要管理员权限</sys:String>
+  <sys:String x:Key="Cleanup.BlockedFormat">已拒绝：{0}</sys:String>
+  <sys:String x:Key="Cleanup.UseRecycleBin">文件和目录移动到回收站（推荐）</sys:String>
+  <sys:String x:Key="Cleanup.PermanentWarning">所选项目中包含无法进入回收站的内容（注册表、服务、计划任务，或您关闭了回收站）。此操作将永久删除。</sys:String>
+  <sys:String x:Key="Cleanup.AcknowledgePermanent">我了解上述项目将被永久删除，无法恢复</sys:String>
+  <sys:String x:Key="Cleanup.Confirm">我已确认以上所选项目属于该软件，同意移除</sys:String>
+  <sys:String x:Key="Cleanup.SelectedFormat">已选择 {0} 项</sys:String>
+  <sys:String x:Key="Cleanup.Execute">移除所选</sys:String>
+  <sys:String x:Key="Cleanup.Executing">正在移除…</sys:String>
+  <sys:String x:Key="Cleanup.RemovingFormat">正在移除 {0}</sys:String>
+  <sys:String x:Key="Cleanup.Refused">安全规则拒绝了此次移除：</sys:String>
+  <sys:String x:Key="Cleanup.SummaryFormat">已移除 {0} / {1} 项。</sys:String>
+  <sys:String x:Key="Cleanup.FailedFormat">{0} 的手动移除失败。</sys:String>
+  <sys:String x:Key="CleanupKind.Directory">目录</sys:String>
+  <sys:String x:Key="CleanupKind.StartupRegistryValue">启动项</sys:String>
+  <sys:String x:Key="CleanupKind.StartupFolderItem">启动文件夹</sys:String>
+  <sys:String x:Key="CleanupKind.ScheduledTask">计划任务</sys:String>
+  <sys:String x:Key="CleanupKind.Service">服务</sys:String>
+  <sys:String x:Key="CleanupKind.RegistryKey">注册表项</sys:String>
+  <sys:String x:Key="Blocker.UserConfirmationRequired">需要用户确认</sys:String>
+  <sys:String x:Key="Blocker.ProtectedPath">路径受系统保护</sys:String>
+  <sys:String x:Key="Blocker.ProtectedApplicationType">系统组件 / 驱动 / 运行库默认保留</sys:String>
+  <sys:String x:Key="Blocker.UndeterminedAttribution">归属待判断</sys:String>
+  <sys:String x:Key="Blocker.ApplicationRunning">程序正在运行</sys:String>
+  <sys:String x:Key="Blocker.ReferencedByService">仍被服务引用 / 服务正在运行</sys:String>
+  <sys:String x:Key="Blocker.LowConfidence">归属可信度不足</sys:String>
+  <sys:String x:Key="Blocker.OfficialUninstallerAvailable">存在官方卸载程序，请先使用它</sys:String>
+  <sys:String x:Key="Blocker.PathNotOwnedByApplication">目录不属于该软件</sys:String>
+  <sys:String x:Key="Blocker.SharedDirectory">与其它程序共享的目录</sys:String>
+  <sys:String x:Key="Blocker.PermanentDeletionNotAcknowledged">未确认永久删除</sys:String>
+
+  <!-- §25 operation log -->
+  <sys:String x:Key="Log.Title">操作记录</sys:String>
+  <sys:String x:Key="Log.Open">查看操作记录</sys:String>
+  <sys:String x:Key="Log.Intro">记录扫描以外的每一次卸载、结束进程、删除目录 / 启动项 / 计划任务 / 服务 / 注册表项操作及其结果。</sys:String>
+  <sys:String x:Key="Log.Time">时间</sys:String>
+  <sys:String x:Key="Log.Operation">操作</sys:String>
+  <sys:String x:Key="Log.Target">目标</sys:String>
+  <sys:String x:Key="Log.Result">结果</sys:String>
+  <sys:String x:Key="Log.Error">错误信息</sys:String>
 
   <!-- §14 detail panel -->
   <sys:String x:Key="Detail.Title">软件详情</sys:String>

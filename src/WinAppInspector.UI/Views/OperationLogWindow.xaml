@@ -1,0 +1,62 @@
+<Window x:Class="WinAppInspector.UI.Views.OperationLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{StaticResource Log.Title}"
+        Width="820" Height="520" MinWidth="600" MinHeight="360"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{StaticResource Brush.WindowBackground}" FontFamily="{StaticResource Font.UI}">
+
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Grid.Row="0" Text="{StaticResource Log.Intro}" Style="{StaticResource Text.Caption}" Margin="0,0,0,10" />
+
+    <ListView x:Name="Entries" Grid.Row="1" Style="{StaticResource List.View}">
+      <ListView.View>
+        <GridView ColumnHeaderContainerStyle="{StaticResource List.Header}">
+          <GridViewColumn Header="{StaticResource Log.Time}" Width="150">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Style="{StaticResource Text.CellSecondary}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="{StaticResource Log.Operation}" Width="130">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Operation}" Style="{StaticResource Text.Cell}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="{StaticResource Log.Target}" Width="300">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Target}" Style="{StaticResource Text.Cell}" ToolTip="{Binding Target}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="{StaticResource Log.Result}" Width="80">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Result}" Style="{StaticResource Text.Cell}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="{StaticResource Log.Error}" Width="240">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Error}" Style="{StaticResource Text.CellSecondary}" ToolTip="{Binding Error}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+        </GridView>
+      </ListView.View>
+    </ListView>
+
+    <Button Grid.Row="2" Style="{StaticResource Toolbar.Button}" Content="{StaticResource About.Close}" HorizontalAlignment="Right" MinWidth="80" Margin="0,12,0,0" Click="CloseClick" />
+  </Grid>
+</Window>

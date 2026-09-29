@@ -44,10 +44,11 @@ public partial class App : Application
                 services.AddWinAppInspectorCore();
                 services.AddWinAppInspectorAnalysis();
                 services.AddWinAppInspectorScanners();
-                services.AddWinAppInspectorActions();
+                services.AddWinAppInspectorActions(DataDirectory);
 
                 services.AddSingleton<IScanService, ScanService>();
                 services.AddSingleton<IconService>();
+                services.AddSingleton<IDialogService, DialogService>();
 
                 services.AddSingleton<DetailViewModel>();
                 services.AddSingleton<OverviewViewModel>();

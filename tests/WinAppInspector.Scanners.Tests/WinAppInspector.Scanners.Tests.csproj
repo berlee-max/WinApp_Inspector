@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WinAppInspector.Scanners\WinAppInspector.Scanners.csproj" />
+    <ProjectReference Include="..\..\src\WinAppInspector.Actions\WinAppInspector.Actions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

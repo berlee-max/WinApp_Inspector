@@ -38,7 +38,11 @@
       <StackPanel>
         <TextBlock Text="{StaticResource Nav.Uninstall}" Style="{StaticResource Text.Title}" />
         <TextBlock Text="{StaticResource Uninstall.Intro}" Style="{StaticResource Text.Caption}" Margin="0,6,0,0" />
-        <TextBlock Text="{StaticResource Uninstall.NotYet}" Style="{StaticResource Text.Caption}" Margin="0,6,0,0" Foreground="{StaticResource Brush.StatusReminder}" />
+        <Grid Margin="0,8,0,0">
+          <TextBlock Text="{Binding BusyText}" Style="{StaticResource Text.Caption}" Foreground="{StaticResource Brush.Accent}" VerticalAlignment="Center"
+                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+          <Button Style="{StaticResource Link.Button}" Content="{StaticResource Log.Open}" HorizontalAlignment="Right" Command="{Binding ShowOperationLogCommand}" />
+        </Grid>
       </StackPanel>
     </Border>
 
@@ -53,7 +57,7 @@
           <TextBlock Text="{StaticResource Uninstall.Official}" Style="{StaticResource Text.Section}" Margin="0" />
           <TextBlock Text="{Binding Uninstallable.Count, StringFormat=' ({0})'}" Style="{StaticResource Text.Section}" Margin="0" />
         </StackPanel>
-        <Button Grid.Column="1" Style="{StaticResource Accent.Button}" Content="{StaticResource Uninstall.Action}" IsEnabled="False" />
+        <Button Grid.Column="1" Style="{StaticResource Accent.Button}" Content="{StaticResource Uninstall.Action}" Command="{Binding UninstallCommand}" />
       </Grid>
       <ListView Style="{StaticResource List.View}" ItemsSource="{Binding Uninstallable}" ItemTemplate="{StaticResource AppRow}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionMode="Single">
@@ -93,7 +97,7 @@
           <TextBlock Text="{StaticResource Uninstall.Manual}" Style="{StaticResource Text.Section}" Margin="0" />
           <TextBlock Text="{Binding ManualCandidates.Count, StringFormat=' ({0})'}" Style="{StaticResource Text.Section}" Margin="0" />
         </StackPanel>
-        <Button Grid.Column="1" Style="{StaticResource Toolbar.Button}" Content="{StaticResource Uninstall.ManualAction}" IsEnabled="False" />
+        <Button Grid.Column="1" Style="{StaticResource Toolbar.Button}" Content="{StaticResource Uninstall.ManualAction}" Command="{Binding ManualRemoveCommand}" />
       </Grid>
       <ListView Style="{StaticResource List.View}" ItemsSource="{Binding ManualCandidates}" ItemTemplate="{StaticResource AppRow}"
                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}" SelectionMode="Single">
