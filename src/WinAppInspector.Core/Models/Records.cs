@@ -69,6 +69,8 @@ public sealed record StartupItemRecord
     public string? ExecutablePath { get; init; }
     /// <summary>From Explorer's StartupApproved state; <c>null</c> when unknown.</summary>
     public bool? IsDisabled { get; init; }
+    /// <summary>For <see cref="StartupItemKind.StartupFolder"/>: the full path of the .lnk / file in the Startup folder (what a cleanup removes).</summary>
+    public string? FilePath { get; init; }
 }
 
 /// <summary>A scheduled task (§7.8).</summary>
@@ -82,6 +84,9 @@ public sealed record ScheduledTaskRecord
     public string? Trigger { get; init; }
     public string? State { get; init; }
     public string? Author { get; init; }
+
+    /// <summary>Folder and name joined with a single backslash, e.g. <c>\Microsoft\Windows\Foo\Update</c>.</summary>
+    public string FullPath => TaskPath.TrimEnd('\\') + "\\" + TaskName;
 }
 
 /// <summary>An entry under one of the three Uninstall registry keys (§7.1).</summary>

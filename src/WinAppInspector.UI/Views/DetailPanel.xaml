@@ -109,7 +109,7 @@
         <!-- §14.4 -->
         <TextBlock Text="{StaticResource Detail.Runtime}" Style="{StaticResource Text.Section}" />
         <TextBlock Text="{StaticResource Detail.NoProcesses}" Style="{StaticResource Text.Caption}"
-                   Visibility="{Binding Processes.Count, Converter={StaticResource EmptyToCollapsed}, ConverterParameter=invert}" />
+                   Visibility="{Binding Processes, Converter={StaticResource EmptyToCollapsed}, ConverterParameter=invert}" />
         <ItemsControl ItemsSource="{Binding Processes}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -122,23 +122,8 @@
 
         <!-- §14.5 -->
         <TextBlock Text="{StaticResource Detail.Links}" Style="{StaticResource Text.Section}" />
-        <TextBlock Text="{StaticResource Detail.NoLinks}">
-          <TextBlock.Style>
-            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
-              <Setter Property="Visibility" Value="Collapsed" />
-              <Style.Triggers>
-                <MultiDataTrigger>
-                  <MultiDataTrigger.Conditions>
-                    <Condition Binding="{Binding StartupItems.Count}" Value="0" />
-                    <Condition Binding="{Binding Services.Count}" Value="0" />
-                    <Condition Binding="{Binding ScheduledTasks.Count}" Value="0" />
-                  </MultiDataTrigger.Conditions>
-                  <Setter Property="Visibility" Value="Visible" />
-                </MultiDataTrigger>
-              </Style.Triggers>
-            </Style>
-          </TextBlock.Style>
-        </TextBlock>
+        <TextBlock Text="{StaticResource Detail.NoLinks}" Style="{StaticResource Text.Caption}"
+                   Visibility="{Binding HasLinks, Converter={StaticResource EmptyToCollapsed}, ConverterParameter=invert}" />
         <ItemsControl ItemsSource="{Binding StartupItems}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -161,7 +146,7 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <TextBlock Style="{StaticResource Text.Mono}">
-                <Run Text="{StaticResource Detail.ScheduledTasks}" /><Run Text=": " /><Run Text="{Binding TaskPath, Mode=OneWay}" /><Run Text="{Binding TaskName, Mode=OneWay}" /><Run Text=" → " /><Run Text="{Binding Execute, Mode=OneWay}" />
+                <Run Text="{StaticResource Detail.ScheduledTasks}" /><Run Text=": " /><Run Text="{Binding FullPath, Mode=OneWay}" /><Run Text=" → " /><Run Text="{Binding Execute, Mode=OneWay}" />
               </TextBlock>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
@@ -169,7 +154,7 @@
 
         <!-- §10.2 evidence summary -->
         <TextBlock Text="{StaticResource Detail.EvidenceTitle}" Style="{StaticResource Text.Section}"
-                   Visibility="{Binding Evidence.Count, Converter={StaticResource EmptyToCollapsed}}" />
+                   Visibility="{Binding Evidence, Converter={StaticResource EmptyToCollapsed}}" />
         <ItemsControl ItemsSource="{Binding Evidence}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>

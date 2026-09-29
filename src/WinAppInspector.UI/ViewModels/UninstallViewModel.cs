@@ -254,7 +254,15 @@ public sealed partial class UninstallViewModel : ObservableObject
         var problems = _planner.Validate(plan);
         if (problems.Count > 0)
         {
-            _dialogs.Warn(Localize.Get("Cleanup.Execute"), Localize.Get("Cleanup.Refused"), string.Join(Environment.NewLine, problems.Select(p => Localize.Get("Blocker." + p.Split(':')[^1].Trim()))));
+            var lines = problems.Select(p =>
+            {
+                var colon = p.LastIndexOf(':');
+                var target = colon < 0 ? null : p[..colon].Trim();
+                var codes = (colon < 0 ? p : p[(colon + 1)..]).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                var text = string.Join(", ", codes.Select(c => Localize.Get("Blocker." + c)));
+                return target is null ? text : $"{target}: {text}";
+            });
+            _dialogs.Warn(Localize.Get("Cleanup.Execute"), Localize.Get("Cleanup.Refused"), string.Join(Environment.NewLine, lines));
             return;
         }
 

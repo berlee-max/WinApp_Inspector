@@ -103,10 +103,48 @@ public sealed class RestorePointManager : IRestorePointManager
 
     public async Task<(bool Succeeded, string? Error)> CreateAsync(string description, CancellationToken cancellationToken)
     {
+        // The WMI call needs administrator rights; the app runs as a normal user (§28), so try it directly first (works when elevated)
+        // and otherwise go through an elevated PowerShell so the UAC prompt appears for this one operation.
         var result = await Task.Run(() => Create(description), cancellationToken).ConfigureAwait(false);
+        if (!result.Succeeded && result.Error is not null && (result.Error.Contains("Access denied", StringComparison.OrdinalIgnoreCase) || result.Error.Contains("拒绝", StringComparison.Ordinal)))
+        {
+            result = await CreateElevatedAsync(description, cancellationToken).ConfigureAwait(false);
+        }
+
         await _log.AppendAsync(new OperationLogEntry(DateTimeOffset.Now, OperationKind.CreateRestorePoint, description,
             result.Succeeded ? OperationResult.Succeeded : OperationResult.Failed, result.Error), cancellationToken).ConfigureAwait(false);
         return result;
+    }
+
+    private static async Task<(bool Succeeded, string? Error)> CreateElevatedAsync(string description, CancellationToken cancellationToken)
+    {
+        var safeDescription = description.Replace("'", "''", StringComparison.Ordinal);
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"Checkpoint-Computer -Description '{safeDescription}' -RestorePointType APPLICATION_INSTALL -ErrorAction Stop\"",
+            UseShellExecute = true,
+            Verb = "runas",
+            WindowStyle = ProcessWindowStyle.Hidden,
+        };
+
+        try
+        {
+            using var process = Process.Start(startInfo);
+            if (process is null)
+            {
+                return (false, "PowerShell could not be started.");
+            }
+
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            return process.ExitCode == 0
+                ? (true, null)
+                : (false, $"Checkpoint-Computer exited with code {process.ExitCode}. Windows creates at most one restore point per 24 hours unless SystemRestorePointCreationFrequency is changed, and System Protection must be enabled (§27).");
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            return (false, "The elevation prompt was declined.");
+        }
     }
 
     private (bool Succeeded, string? Error) Create(string description)

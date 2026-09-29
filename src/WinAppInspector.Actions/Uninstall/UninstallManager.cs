@@ -61,10 +61,10 @@ public sealed class UninstallManager : IUninstallManager
             await LogAsync(app, method, OperationResult.Cancelled, null, CancellationToken.None).ConfigureAwait(false);
             throw;
         }
-        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException or System.Runtime.InteropServices.COMException or ArgumentException)
         {
-            // §34: the concrete reason (missing uninstaller, access denied, ...) reaches the user.
-            result = new UninstallResult(UninstallOutcome.Failed, method, command, null, ex.Message, watch.Elapsed);
+            // §34: the concrete reason (missing uninstaller, access denied, deployment HRESULT, ...) reaches the user.
+            result = new UninstallResult(UninstallOutcome.Failed, method, command, ex.HResult, ex.Message, watch.Elapsed);
         }
 
         await LogAsync(app, method, result.Succeeded ? OperationResult.Succeeded : result.Outcome == UninstallOutcome.CancelledByUser ? OperationResult.Cancelled : OperationResult.Failed,
@@ -183,15 +183,29 @@ public sealed class UninstallManager : IUninstallManager
     {
         var fullName = app.AppxPackageFullName!;
         var manager = new Windows.Management.Deployment.PackageManager();
-        var result = await manager.RemovePackageAsync(fullName).AsTask(cancellationToken).ConfigureAwait(false);
-
-        if (result.ExtendedErrorCode is null)
+        try
         {
-            return new UninstallResult(UninstallOutcome.Succeeded, UninstallMethod.Appx, fullName, 0, null, watch.Elapsed);
-        }
+            // A failed deployment surfaces as a faulted task (COMException with the deployment HRESULT), not as a result object.
+            var result = await manager.RemovePackageAsync(fullName).AsTask(cancellationToken).ConfigureAwait(false);
+            if (result.ExtendedErrorCode is null)
+            {
+                return new UninstallResult(UninstallOutcome.Succeeded, UninstallMethod.Appx, fullName, 0, null, watch.Elapsed);
+            }
 
-        var error = string.IsNullOrWhiteSpace(result.ErrorText) ? result.ExtendedErrorCode.Message : result.ErrorText;
-        return new UninstallResult(UninstallOutcome.Failed, UninstallMethod.Appx, fullName, result.ExtendedErrorCode.HResult, error, watch.Elapsed);
+            var error = string.IsNullOrWhiteSpace(result.ErrorText) ? result.ExtendedErrorCode.Message : result.ErrorText;
+            return new UninstallResult(UninstallOutcome.Failed, UninstallMethod.Appx, fullName, result.ExtendedErrorCode.HResult, error, watch.Elapsed);
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException or UnauthorizedAccessException or ArgumentException)
+        {
+            var message = ex.HResult switch
+            {
+                unchecked((int)0x80073CFA) => "The package is not installed for the current user.",
+                unchecked((int)0x80073D19) => "The package is marked as non-removable by the system.",
+                unchecked((int)0x80073CF1) => "The package was not found.",
+                _ => ex.Message,
+            };
+            return new UninstallResult(UninstallOutcome.Failed, UninstallMethod.Appx, fullName, ex.HResult, message, watch.Elapsed);
+        }
     }
 
     private Task LogAsync(ApplicationEntity app, UninstallMethod method, OperationResult result, string? error, CancellationToken cancellationToken) =>

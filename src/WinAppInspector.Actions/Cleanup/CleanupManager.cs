@@ -62,8 +62,8 @@ public sealed class CleanupManager : ICleanupManager
             {
                 result = item.Kind switch
                 {
-                    CleanupItemKind.Directory => RemoveDirectory(plan, item),
-                    CleanupItemKind.StartupFolderItem => RemoveFile(plan, item),
+                    CleanupItemKind.Directory => await Task.Run(() => RemoveDirectory(plan, item), cancellationToken).ConfigureAwait(false),
+                    CleanupItemKind.StartupFolderItem => await Task.Run(() => RemoveFile(plan, item), cancellationToken).ConfigureAwait(false),
                     CleanupItemKind.StartupRegistryValue => await RemoveRegistryValueAsync(item, cancellationToken).ConfigureAwait(false),
                     CleanupItemKind.RegistryKey => await RemoveRegistryKeyAsync(item, cancellationToken).ConfigureAwait(false),
                     CleanupItemKind.ScheduledTask => await RemoveScheduledTaskAsync(item, cancellationToken).ConfigureAwait(false),
@@ -94,17 +94,18 @@ public sealed class CleanupManager : ICleanupManager
             return new CleanupItemResult(item, false, false, $"Protected path ({protection.Kind}).");
         }
 
+        // The entity's process list dates from the scan; re-check which of those processes are still alive right now.
+        var live = plan.Application.Processes.Where(IsStillRunning).ToArray();
         var verdict = _guard.Evaluate(new DeletionRequest
         {
-            Application = plan.Application with { PreferredUninstallMethod = Core.Models.UninstallMethod.None },
+            Application = plan.Application with { PreferredUninstallMethod = Core.Models.UninstallMethod.None, Processes = live },
             TargetPaths = [path],
             UserConfirmed = plan.UserConfirmed,
             ServicesHandled = true,
         });
-        var hard = verdict.HardBlockers.Where(b => b.Kind != DeletionBlockerKind.ApplicationRunning || Directory.Exists(path)).ToList();
-        if (hard.Count > 0)
+        if (verdict.HardBlockers.Count > 0)
         {
-            return new CleanupItemResult(item, false, false, "Blocked: " + string.Join(", ", hard.Select(b => b.Kind)));
+            return new CleanupItemResult(item, false, false, "Blocked: " + string.Join(", ", verdict.HardBlockers.Select(b => b.Kind).Distinct()));
         }
 
         if (!Directory.Exists(path))
@@ -114,8 +115,13 @@ public sealed class CleanupManager : ICleanupManager
 
         if (plan.UseRecycleBin)
         {
+            // §24: no silent fallback to permanent deletion; the user must untick the recycle bin and acknowledge it explicitly.
+            if (!RecycleBin.CanRecycle(path, out var why))
+            {
+                return new CleanupItemResult(item, false, false, "Cannot be moved to the recycle bin (permanent deletion required): " + why);
+            }
+
             var error = RecycleBin.Send(path);
-            // §24: no silent fallback to permanent deletion; the user must choose that explicitly.
             return error is null
                 ? new CleanupItemResult(item, true, false, null)
                 : new CleanupItemResult(item, false, false, "Could not move to the recycle bin: " + error);
@@ -125,12 +131,45 @@ public sealed class CleanupManager : ICleanupManager
         return new CleanupItemResult(item, true, true, null);
     }
 
+    /// <summary>True when the scanned process still exists and, when readable, still runs the same image.</summary>
+    private static bool IsStillRunning(Core.Models.ProcessRecord record)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(record.ProcessId);
+            if (process.HasExited)
+            {
+                return false;
+            }
+
+            try
+            {
+                var image = process.MainModule?.FileName;
+                return image is null || record.ExecutablePath is null || WindowsPath.AreEqual(image, record.ExecutablePath);
+            }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+            {
+                // Access denied to the image path: the PID is alive; keep the conservative answer.
+                return true;
+            }
+        }
+        catch (ArgumentException)
+        {
+            return false; // no such process
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
     private CleanupItemResult RemoveFile(CleanupPlan plan, CleanupCandidate item)
     {
-        var path = WindowsPath.Normalize(Core.Parsing.CommandLine.ExtractExecutable(item.Target) ?? item.Target);
-        if (_protectedPaths.Check(WindowsPath.GetDirectoryName(path)).Kind is PathProtectionKind.WindowsDirectory or PathProtectionKind.WindowsApps)
+        var path = WindowsPath.Normalize(item.Target);
+        // Only entries inside a Startup folder are ever removed this way (§7.7); anything else is refused.
+        if (!path.Contains(@"\Start Menu\Programs\Startup", StringComparison.OrdinalIgnoreCase) || _protectedPaths.IsProtected(path))
         {
-            return new CleanupItemResult(item, false, false, "Protected path.");
+            return new CleanupItemResult(item, false, false, "Not a Startup folder entry.");
         }
 
         if (!File.Exists(path))
@@ -140,6 +179,11 @@ public sealed class CleanupManager : ICleanupManager
 
         if (plan.UseRecycleBin)
         {
+            if (!RecycleBin.CanRecycle(path, out var why))
+            {
+                return new CleanupItemResult(item, false, false, "Cannot be moved to the recycle bin (permanent deletion required): " + why);
+            }
+
             var error = RecycleBin.Send(path);
             return error is null ? new CleanupItemResult(item, true, false, null) : new CleanupItemResult(item, false, false, "Could not move to the recycle bin: " + error);
         }
@@ -196,8 +240,13 @@ public sealed class CleanupManager : ICleanupManager
         try
         {
             using var service = new Microsoft.Win32.TaskScheduler.TaskService();
-            var folderPath = WindowsPath.GetDirectoryName(item.Target) ?? "\\";
-            var folder = service.GetFolder(folderPath.Length == 0 ? "\\" : folderPath);
+            var folderPath = WindowsPath.GetDirectoryName(item.Target);
+            var folder = service.GetFolder(string.IsNullOrEmpty(folderPath) ? "\\" : folderPath);
+            if (folder is null)
+            {
+                return new CleanupItemResult(item, true, true, null); // the folder, and therefore the task, is already gone
+            }
+
             folder.DeleteTask(WindowsPath.GetFileName(item.Target), exceptionOnNotExists: false);
             return new CleanupItemResult(item, true, true, null);
         }
