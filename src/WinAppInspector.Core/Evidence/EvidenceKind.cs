@@ -27,6 +27,14 @@ public enum EvidenceKind
     ShortcutPointsToDirectory = 10,
     /// <summary>CompanyName of an executable in the directory matches the publisher.</summary>
     ExecutableCompanyNameMatch = 11,
+    /// <summary>AppX package InstallLocation matches the directory exactly.</summary>
+    PackageInstallLocationMatch = 12,
+    /// <summary>The directory is an ancestor of the registered InstallLocation (vendor folder).</summary>
+    ParentOfInstallLocation = 13,
+    /// <summary>The DisplayIcon path points into the directory.</summary>
+    DisplayIconPointsToDirectory = 14,
+    /// <summary>Folder name equals the application, install-folder or publisher name after normalisation (stronger than "similar", still name-only).</summary>
+    FolderNameExactMatch = 15,
 }
 
 /// <summary>Weight buckets from §10.2. The integer value is the score contribution.</summary>

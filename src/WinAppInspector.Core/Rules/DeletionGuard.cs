@@ -34,6 +34,8 @@ public enum DeletionBlockerKind
     OfficialUninstallerAvailable = 7,
     /// <summary>The target is not one of the application's known directories.</summary>
     PathNotOwnedByApplication = 8,
+    /// <summary>§5.4: the target is a vendor / parent folder shared with other applications.</summary>
+    SharedDirectory = 9,
 }
 
 /// <summary>One reason a deletion is refused, with the concrete target it applies to.</summary>
@@ -101,9 +103,20 @@ public sealed class DeletionGuard
                 continue;
             }
 
-            if (!app.Directories.Any(d => WindowsPath.IsSameOrUnder(target, d.Path)))
+            var owners = app.Directories.Where(d => WindowsPath.IsSameOrUnder(target, d.Path)).ToArray();
+            if (owners.Length == 0)
             {
                 blockers.Add(new DeletionBlocker(DeletionBlockerKind.PathNotOwnedByApplication, target));
+            }
+            else if (owners.All(d => d.Role == DirectoryRole.SharedParent))
+            {
+                // Program Files\Vendor is owned "through" its children; deleting it would take other products with it.
+                blockers.Add(new DeletionBlocker(DeletionBlockerKind.SharedDirectory, target));
+            }
+            else if (owners.Any(d => d.AttributionEvidence.Count > 0 && Evidence.ConfidenceCalculator.Score(d.AttributionEvidence) < Evidence.ConfidenceCalculator.MediumThreshold))
+            {
+                // The directory itself was linked to the application on weak evidence (§23 低可信度关联).
+                blockers.Add(new DeletionBlocker(DeletionBlockerKind.LowConfidence, target));
             }
 
             foreach (var process in app.Processes)
