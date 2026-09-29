@@ -50,33 +50,39 @@ jobs:
       - name: Test
         run: dotnet test WinAppInspector.sln --configuration Release
 
-      # Self-contained: one exe, no .NET runtime needed on the target machine (the "green" form the requirements ask for).
-      - name: Publish self-contained single file
+      # Portable: a self-contained folder (exe + dlls). Nothing to install and nothing to extract at start-up.
+      # WPF cannot be trimmed, so the folder carries the whole .NET 8 + WPF runtime (~170 MB on disk); a compressed
+      # single-file exe would be the same bytes plus a slow first start, so it is deliberately not built.
+      - name: Publish portable (self-contained folder)
         run: >
           dotnet publish src/WinAppInspector.UI/WinAppInspector.UI.csproj
           --configuration Release --runtime win-x64 --self-contained true
-          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          -p:PublishSingleFile=false -p:PublishReadyToRun=true -p:DebugType=none
           -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
-          --output publish/self-contained
+          --output publish/portable
 
-      # Framework-dependent: much smaller, needs the .NET 8 Desktop Runtime installed.
-      - name: Publish framework-dependent
+      # Lite: one small exe that needs the .NET 8 Desktop Runtime installed (the apphost offers the download when it is missing).
+      - name: Publish lite (framework-dependent single file)
         run: >
           dotnet publish src/WinAppInspector.UI/WinAppInspector.UI.csproj
           --configuration Release --runtime win-x64 --self-contained false
-          -p:PublishSingleFile=true -p:DebugType=none
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=false -p:DebugType=none
           -p:Version=${{ steps.version.outputs.version }} -p:AssemblyVersion=${{ steps.version.outputs.numeric }} -p:FileVersion=${{ steps.version.outputs.numeric }}
-          --output publish/framework-dependent
+          --output publish/lite
 
       - name: Package
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item README.md publish/self-contained/
-          Copy-Item README.md publish/framework-dependent/
-          Compress-Archive -Path publish/self-contained/* -DestinationPath "dist/WinAppInspector-$v-win-x64.zip"
-          Compress-Archive -Path publish/framework-dependent/* -DestinationPath "dist/WinAppInspector-$v-win-x64-framework-dependent.zip"
+          Copy-Item README.md publish/portable/
+          Copy-Item README.md publish/lite/
+          # The portable zip unpacks into a folder of its own so the dlls do not spill into Downloads.
+          New-Item -ItemType Directory -Force -Path "stage/WinAppInspector-$v" | Out-Null
+          Copy-Item publish/portable/* "stage/WinAppInspector-$v" -Recurse
+          Compress-Archive -Path "stage/WinAppInspector-$v" -DestinationPath "dist/WinAppInspector-$v-win-x64-portable.zip"
+          Compress-Archive -Path publish/lite/* -DestinationPath "dist/WinAppInspector-$v-win-x64-lite.zip"
+          "portable folder on disk: {0:N0} MB" -f ((Get-ChildItem publish/portable -Recurse | Measure-Object Length -Sum).Sum / 1MB)
           Get-ChildItem dist | ForEach-Object { "{0}  {1:N1} MB" -f $_.Name, ($_.Length / 1MB) }
           Get-FileHash dist/*.zip -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS.txt
           Get-Content dist/SHA256SUMS.txt
@@ -99,11 +105,11 @@ jobs:
 
             | 文件 | 说明 |
             |---|---|
-            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64.zip` | **推荐**。自包含单文件 exe，解压即用，不需要安装 .NET。 |
-            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-framework-dependent.zip` | 体积小，需要已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)。 |
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-portable.zip` | **便携版**。解压得到一个文件夹，运行里面的 `WinAppInspector.exe`；不需要安装 .NET，启动不解压。因为 WPF 无法裁剪，文件夹带完整运行时，解压后约 170 MB。 |
+            | `WinAppInspector-${{ steps.version.outputs.version }}-win-x64-lite.zip` | **精简版**，单个 exe 约 7 MB。需要已安装 [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)（没装时 exe 会提示下载）。 |
             | `SHA256SUMS.txt` | 校验和。 |
 
-            要求 Windows 10 1809 及以上，64 位。首次运行 Windows SmartScreen 可能提示"未知发布者"（未签名），选择"仍要运行"。
+            要求 Windows 10 1809 及以上，64 位。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"，选择"仍要运行"。
             程序不需要管理员权限；只有删除 HKLM 项、服务、计划任务时才会按需提权。
           files: |
             dist/*.zip

@@ -41,8 +41,10 @@ tests/WinAppInspector.Scanners.Tests    Windows 冒烟测试（[WindowsFact]，�
 
 [Releases](https://github.com/berlee-max/WinApp_Inspector/releases) 提供两种 win-x64 包：
 
-- `WinAppInspector-<版本>-win-x64.zip`：自包含单文件 exe，解压即用，不需要安装 .NET（推荐）。
-- `WinAppInspector-<版本>-win-x64-framework-dependent.zip`：体积小，需要 .NET 8 Desktop Runtime。
+- `WinAppInspector-<版本>-win-x64-portable.zip`：**便携版**。解压得到一个文件夹，运行 `WinAppInspector.exe`，不需要安装 .NET，启动不解压。WPF 不支持裁剪，所以文件夹带完整的 .NET 8 + WPF 运行时，解压后约 170 MB；这是自包含 WPF 程序的下限。
+- `WinAppInspector-<版本>-win-x64-lite.zip`：**精简版**，单个 exe 约 7 MB，需要已安装 .NET 8 Desktop Runtime（没装时 exe 会提示下载）。
+
+不提供压缩的单文件自包含 exe：字节数一样多，却要在每次启动时解压到临时目录。
 
 要求 Windows 10 1809 及以上。程序未签名，首次运行 SmartScreen 可能提示"未知发布者"。发布由 `.github/workflows/release.yml` 完成：推送 `v*` 标签，或在 Actions 里手动运行并填写版本号（生成预发布）。
 
