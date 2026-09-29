@@ -150,7 +150,7 @@ public sealed record SignatureInfo
     public required SignatureStatus Status { get; init; }
     public string? SubjectName { get; init; }
     public string? IssuerName { get; init; }
-    /// <summary>Publisher name extracted from the certificate subject (CN / O).</summary>
+    /// <summary>Publisher name extracted from the certificate subject: the O attribute when present, otherwise the CN.</summary>
     public string? Publisher { get; init; }
     public string? Thumbprint { get; init; }
     public DateTimeOffset? SigningTime { get; init; }
