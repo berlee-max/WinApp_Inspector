@@ -124,6 +124,13 @@ internal sealed class SnapshotBuilder
         return this;
     }
 
+    /// <summary>A process whose image path could not be read (access denied on protected processes).</summary>
+    public SnapshotBuilder ProcessWithoutPath(string name, int pid)
+    {
+        _processes.Add(new ProcessRecord { ProcessId = pid, Name = name, ExecutablePath = null });
+        return this;
+    }
+
     public SnapshotBuilder Service(string name, string executablePath, string state = "Running")
     {
         _services.Add(new ServiceRecord { Name = name, DisplayName = name, ExecutablePath = executablePath, PathName = executablePath, State = state });

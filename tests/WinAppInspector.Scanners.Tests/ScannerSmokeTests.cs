@@ -123,6 +123,44 @@ public class ScannerSmokeTests
     }
 
     [WindowsFact]
+    public async Task DirectoryScanner_scans_custom_directories_but_never_the_folder_itself_or_system_locations()
+    {
+        var folders = Folders;
+        var root = Directory.CreateTempSubdirectory("wai-tools-").FullName;
+        var tool = Path.Combine(root, "Everything");
+        Directory.CreateDirectory(tool);
+        await File.WriteAllBytesAsync(Path.Combine(tool, "Everything.exe"), new byte[] { 0x4D, 0x5A });
+        await File.WriteAllTextAsync(Path.Combine(root, "stray.exe"), "not a program");
+        var missing = Path.Combine(root, "does-not-exist");
+
+        try
+        {
+            var options = ScanOptions.Default with
+            {
+                DirectoryRoots = new HashSet<ScanRoot>(),
+                CustomDirectories = [root, missing, folders.SystemRoot, folders.SystemDrive, folders.UserProfile, folders.UsersRoot],
+            };
+            var scanner = new DirectoryScanner(folders, new ProtectedPathRule(folders), new StaticScanOptionsProvider(options), NullLogger<DirectoryScanner>.Instance);
+
+            var result = await scanner.ScanAsync(null, CancellationToken.None);
+
+            result.Items.Should().ContainSingle().Which.Should().Match<AppDirectory>(d =>
+                WindowsPath.AreEqual(d.Path, tool) && d.Root == ScanRoot.Custom && d.ExecutablePaths.Count == 1);
+            result.Items.Should().NotContain(d => WindowsPath.AreEqual(d.Path, root), "the custom folder itself is a container, not a program");
+            result.Errors.Should().Contain(e => WindowsPath.AreEqual(e.Target, missing));
+            result.Errors.Should().Contain(e => WindowsPath.AreEqual(e.Target, folders.SystemRoot), "the Windows directory is refused (§11)");
+            result.Errors.Should().Contain(e => WindowsPath.AreEqual(e.Target, folders.SystemDrive), "a drive root is refused (§11)");
+            result.Errors.Should().Contain(e => WindowsPath.AreEqual(e.Target, folders.UserProfile) && e.Code == ScanErrorCodes.CustomDirectoryProtected, "Desktop / Downloads must never become programs");
+            result.Errors.Should().Contain(e => WindowsPath.AreEqual(e.Target, folders.UsersRoot) && e.Code == ScanErrorCodes.CustomDirectoryProtected, "other accounts must never become programs");
+            result.Errors.Should().Contain(e => WindowsPath.AreEqual(e.Target, root) && e.Code == ScanErrorCodes.CustomDirectoryLooksLikeProgram, "the root holds stray.exe itself");
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [WindowsFact]
     public async Task DirectorySizeCalculator_measures_a_temp_tree()
     {
         var root = Directory.CreateTempSubdirectory("wai-size-").FullName;

@@ -115,6 +115,18 @@ public class ApplicationResolverTests
         Resolve(b).Applications.Single().AppType.Should().Be(AppType.SuspectedResidue);
     }
 
+    [Fact]
+    public void Stale_folder_without_executables_under_a_custom_root_is_undetermined_not_residue()
+    {
+        var b = new SnapshotBuilder();
+        b.Directory(@"D:\Tools\Notes", ScanRoot.Custom, lastWrite: SnapshotBuilder.Now.AddDays(-400), children: ["2019"], fileCount: 2);
+
+        var app = Resolve(b).Applications.Single();
+
+        app.AppType.Should().Be(AppType.Undetermined, "user data in a user-added folder must never be offered as residue");
+        app.Reasons.Should().Contain(r => r.Kind == ReasonKind.MainExecutableMissing);
+    }
+
     // ---- §41: shared runtime --------------------------------------------------------------------------------------
 
     [Fact]
@@ -399,6 +411,27 @@ public class ApplicationResolverTests
     }
 
     // ---- Orphans --------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void Running_processes_outside_every_known_directory_are_reported_as_orphans()
+    {
+        var b = new SnapshotBuilder();
+        var chrome = $@"{b.ProgramFiles}\Google\Chrome\Application\chrome.exe";
+        b.Registry("Google Chrome", "Google LLC", installLocation: $@"{b.ProgramFiles}\Google\Chrome\Application")
+         .Directory($@"{b.ProgramFiles}\Google\Chrome\Application", ScanRoot.ProgramFiles, executables: [chrome])
+         .Process(chrome, 10)
+         .Process(@"D:\Tools\Everything\Everything.exe", 20)
+         .Process(@"D:\Tools\Everything\Everything.exe", 21)
+         .Process($@"{b.Folders.SystemRoot}\explorer.exe", 30)
+         .Process($@"{b.Folders.SystemRoot}\System32\svchost.exe", 31);
+        b.ProcessWithoutPath("Protected", 40);
+
+        var result = Resolve(b);
+
+        result.Applications.Should().ContainSingle(a => a.Name == "Google Chrome").Which.Processes.Should().ContainSingle().Which.ProcessId.Should().Be(10);
+        result.OrphanProcesses.Select(p => p.ProcessId).Should().BeEquivalentTo([20, 21], "only the portable tool outside the scan scope is unattributed");
+        result.OrphanProcesses.Should().OnlyContain(p => p.ExecutablePath == @"D:\Tools\Everything\Everything.exe");
+    }
 
     [Fact]
     public void Runtime_items_pointing_nowhere_are_reported_as_orphans_except_windows_ones()

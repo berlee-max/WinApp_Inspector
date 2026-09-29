@@ -38,6 +38,41 @@ public sealed record ScanResultRow(
     string VerdictText,
     string Category);
 
+/// <summary>Kind of a runtime item that no application claimed.</summary>
+public enum UnattributedKind
+{
+    Process = 0,
+    StartupItem = 1,
+    Service = 2,
+    ScheduledTask = 3,
+}
+
+/// <summary>
+/// A running process, startup entry, service or scheduled task whose executable lies outside every discovered
+/// application directory (§7.5–7.8). Typically portable software started from a folder outside the scan scope;
+/// the user can analyse that folder or add it to the scan scope. Nothing here can be deleted directly.
+/// </summary>
+public sealed record UnattributedRow(UnattributedKind Kind, string KindText, string Name, string ExecutablePath, string Detail, bool TargetExists)
+{
+    /// <summary>The folder to analyse (§18) for this item.</summary>
+    public string Folder => WindowsPath.GetDirectoryName(ExecutablePath) ?? ExecutablePath;
+
+    /// <summary>Why it is unattributed: the target is gone (a dangling registration, likely residue) or it lives outside the scan scope.</summary>
+    public string ReasonText => Localize.Get(TargetExists ? "Unattributed.OutOfScope" : "Unattributed.Missing");
+}
+
+/// <summary>§34 error row with the cause localised when the scanner supplied a code.</summary>
+public sealed record ScanErrorRow(string Source, string Target, string Text)
+{
+    public static ScanErrorRow From(ScanError error) => new(error.Source, error.Target, error.Code switch
+    {
+        ScanErrorCodes.CustomDirectoryMissing => Localize.Get("ScanError.CustomDirectoryMissing"),
+        ScanErrorCodes.CustomDirectoryProtected => Localize.Format("ScanError.CustomDirectoryProtected", Localize.Get("Protection." + error.Detail)),
+        ScanErrorCodes.CustomDirectoryLooksLikeProgram => Localize.Get("ScanError.CustomDirectoryLooksLikeProgram"),
+        _ => error.Message,
+    });
+}
+
 /// <summary>§17 result categories.</summary>
 public enum ScanCategory
 {
@@ -94,7 +129,10 @@ public sealed partial class ScanViewModel : ObservableObject
 
     public ObservableCollection<ScanResultRow> Rows { get; } = [];
 
-    public ObservableCollection<ScanError> Errors { get; } = [];
+    public ObservableCollection<ScanErrorRow> Errors { get; } = [];
+
+    /// <summary>Runtime items no application claimed; empty until a fresh scan has run (not part of the cache).</summary>
+    public ObservableCollection<UnattributedRow> Unattributed { get; } = [];
 
     public IReadOnlyList<KeyValuePair<ScanCategory, string>> Categories { get; } =
         Enum.GetValues<ScanCategory>().Select(c => new KeyValuePair<ScanCategory, string>(c, Localize.Get("ScanCategory." + c))).ToArray();
@@ -120,6 +158,18 @@ public sealed partial class ScanViewModel : ObservableObject
         }
     }
 
+    /// <summary>§18 for an unattributed item: analyse the folder its executable lives in.</summary>
+    [RelayCommand(CanExecute = nameof(CanAnalyzeUnattributed))]
+    private void AnalyzeUnattributed(UnattributedRow? row)
+    {
+        if (row is not null)
+        {
+            AnalyzeFolderRequested?.Invoke(this, row.Folder);
+        }
+    }
+
+    private static bool CanAnalyzeUnattributed(UnattributedRow? row) => row?.TargetExists == true;
+
     public void BeginScan()
     {
         IsScanning = true;
@@ -127,6 +177,7 @@ public sealed partial class ScanViewModel : ObservableObject
         ProgressValue = 0;
         CurrentItem = string.Empty;
         Errors.Clear();
+        Unattributed.Clear();
         foreach (var stage in Stages)
         {
             stage.IsActive = false;
@@ -189,7 +240,7 @@ public sealed partial class ScanViewModel : ObservableObject
         Errors.Clear();
         foreach (var error in errors)
         {
-            Errors.Add(error);
+            Errors.Add(ScanErrorRow.From(error));
         }
 
         _allRows.Clear();
@@ -202,6 +253,54 @@ public sealed partial class ScanViewModel : ObservableObject
         }
 
         RefreshRows();
+    }
+
+    /// <summary>Replaces the unattributed list from a resolution. The inspector's own process is not an unknown program.</summary>
+    public void SetUnattributed(IReadOnlyList<ProcessRecord> processes, IReadOnlyList<StartupItemRecord> startupItems, IReadOnlyList<ServiceRecord> services, IReadOnlyList<ScheduledTaskRecord> tasks)
+    {
+        Unattributed.Clear();
+        var self = Environment.ProcessPath;
+
+        // One row per executable; several PIDs of the same program are one item.
+        foreach (var group in processes
+                     .Where(p => p.ExecutablePath is not null && (self is null || !WindowsPath.AreEqual(p.ExecutablePath, self)))
+                     .GroupBy(p => p.ExecutablePath!, StringComparer.OrdinalIgnoreCase)
+                     .OrderBy(g => WindowsPath.GetFileName(g.Key), StringComparer.CurrentCultureIgnoreCase))
+        {
+            var first = group.First();
+            var product = first.ProductName ?? first.CompanyName;
+            var pids = string.Join(", ", group.Select(p => p.ProcessId));
+            var detail = product is null ? Localize.Format("Unattributed.PidsFormat", pids) : $"{product}（{Localize.Format("Unattributed.PidsFormat", pids)}）";
+            // A running process always exists; the check matters for the registrations below.
+            Unattributed.Add(new UnattributedRow(UnattributedKind.Process, Localize.Get("Unattributed.Process"), first.Name, group.Key, detail, TargetExists: true));
+        }
+
+        foreach (var item in startupItems.Where(i => i.ExecutablePath is not null).OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase))
+        {
+            Unattributed.Add(new UnattributedRow(UnattributedKind.StartupItem, Localize.Get("Unattributed.StartupItem"), item.Name, item.ExecutablePath!, item.Location, Exists(item.ExecutablePath!)));
+        }
+
+        foreach (var service in services.Where(s => s.ExecutablePath is not null).OrderBy(s => s.DisplayName ?? s.Name, StringComparer.CurrentCultureIgnoreCase))
+        {
+            Unattributed.Add(new UnattributedRow(UnattributedKind.Service, Localize.Get("Unattributed.Service"), service.DisplayName ?? service.Name, service.ExecutablePath!, service.State ?? string.Empty, Exists(service.ExecutablePath!)));
+        }
+
+        foreach (var task in tasks.Where(t => t.Execute is not null).OrderBy(t => t.FullPath, StringComparer.CurrentCultureIgnoreCase))
+        {
+            Unattributed.Add(new UnattributedRow(UnattributedKind.ScheduledTask, Localize.Get("Unattributed.ScheduledTask"), task.FullPath, task.Execute!, task.State ?? string.Empty, Exists(task.Execute!)));
+        }
+
+        static bool Exists(string path)
+        {
+            try
+            {
+                return System.IO.File.Exists(path);
+            }
+            catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return false;
+            }
+        }
     }
 
     public void MarkSizesDone()

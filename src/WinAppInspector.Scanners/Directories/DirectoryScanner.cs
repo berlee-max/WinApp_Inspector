@@ -7,8 +7,8 @@ using WinAppInspector.Core.Scanning;
 namespace WinAppInspector.Scanners.Directories;
 
 /// <summary>
-/// Discovers candidate application directories under the §6 roots. Discovery is shallow by design (§32):
-/// one level of children per root (plus <c>AppData\Local\Programs\*</c>), executables looked up at most
+/// Discovers candidate application directories under the §6 roots and the user's custom directories (§26.1).
+/// Discovery is shallow by design (§32): one level of children per root (plus <c>AppData\Local\Programs\*</c>), executables looked up at most
 /// <see cref="ScanOptions.ExecutableSearchDepth"/> levels deep, no size computation.
 /// </summary>
 public sealed class DirectoryScanner : IScanner<AppDirectory>
@@ -51,15 +51,38 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
         var items = new List<AppDirectory>();
         var errors = new List<ScanError>();
 
-        foreach (var root in _options.Current.DirectoryRoots.OrderBy(r => (int)r))
+        var roots = _options.Current.DirectoryRoots.OrderBy(r => (int)r).Select(r => (Root: r, Path: _folders.PathOf(r)))
+            .Concat(_options.Current.CustomDirectories.Select(d => (Root: ScanRoot.Custom, Path: WindowsPath.Normalize(d))));
+
+        foreach (var (root, rootPath) in roots)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var rootPath = _folders.PathOf(root);
             progress?.Report(new ScanProgress(ScanStages.Directories, rootPath));
+
+            if (root == ScanRoot.Custom)
+            {
+                // A user-added folder must not be a system location, a drive root or a user profile (§11): its children would be
+                // Desktop, Downloads, other accounts... which must never be offered as programs. Its own path is never an application.
+                var protection = _protectedPaths.Check(rootPath);
+                if (protection.Kind is not (PathProtectionKind.None or PathProtectionKind.ScanRoot))
+                {
+                    errors.Add(new ScanError(Name, rootPath, $"Custom scan directory skipped: protected location ({protection.Kind}).",
+                        Code: ScanErrorCodes.CustomDirectoryProtected, Detail: protection.Kind.ToString()));
+                    continue;
+                }
+            }
 
             if (!Directory.Exists(rootPath))
             {
-                _logger.LogDebug("Scan root {Root} does not exist", rootPath);
+                if (root == ScanRoot.Custom)
+                {
+                    errors.Add(new ScanError(Name, rootPath, "Custom scan directory does not exist.", Code: ScanErrorCodes.CustomDirectoryMissing));
+                }
+                else
+                {
+                    _logger.LogDebug("Scan root {Root} does not exist", rootPath);
+                }
+
                 continue;
             }
 
@@ -72,6 +95,14 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
             {
                 errors.Add(new ScanError(Name, rootPath, ex.Message, ex));
                 continue;
+            }
+
+            if (root == ScanRoot.Custom && HasTopLevelExecutable(rootPath))
+            {
+                // The folder holds a program directly, so it is one application rather than a collection of them; its data
+                // sub-folders must not be judged on their own. Tell the user to analyse it or add its parent instead (§18).
+                errors.Add(new ScanError(Name, rootPath, "Custom scan directory contains executables itself; analyse it as one folder or add its parent.",
+                    Code: ScanErrorCodes.CustomDirectoryLooksLikeProgram));
             }
 
             // User-level installs live one level deeper (§9.4).
@@ -98,8 +129,10 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
                 var dir = candidates[i];
                 progress?.Report(new ScanProgress(ScanStages.Directories, dir.FullName, i + 1, candidates.Count));
 
-                // WindowsApps is covered by the AppX scanner and is off-limits anyway (§11).
-                if (_protectedPaths.Check(dir.FullName).Kind == PathProtectionKind.WindowsApps)
+                // WindowsApps is covered by the AppX scanner and is off-limits anyway (§11). Under a user-added root
+                // (which could be a drive root's neighbour) no protected location ever becomes an application directory.
+                var childProtection = _protectedPaths.Check(dir.FullName).Kind;
+                if (childProtection == PathProtectionKind.WindowsApps || (root == ScanRoot.Custom && childProtection != PathProtectionKind.None))
                 {
                     continue;
                 }
@@ -180,6 +213,18 @@ public sealed class DirectoryScanner : IScanner<AppDirectory>
             {
                 return;
             }
+        }
+    }
+
+    private static bool HasTopLevelExecutable(string path)
+    {
+        try
+        {
+            return new DirectoryInfo(path).EnumerateFiles("*.exe", ChildOptions).Any();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or System.Security.SecurityException)
+        {
+            return false;
         }
     }
 

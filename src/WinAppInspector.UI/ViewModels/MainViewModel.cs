@@ -229,6 +229,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _lastSnapshot = outcome.Snapshot;
             _lastScanTime = outcome.Snapshot.ScanTime;
             LoadResults(outcome.Resolution.Applications, outcome.Snapshot.Errors);
+            var r = outcome.Resolution;
+            Scan.SetUnattributed(r.OrphanProcesses, r.OrphanStartupItems, r.OrphanServices, r.OrphanScheduledTasks);
             LastScanText = Localize.Format("Status.LastScanFormat", outcome.Snapshot.ScanTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture));
             StatusText = Localize.Format("Status.ScanDoneFormat", outcome.Resolution.Applications.Count, outcome.Snapshot.Errors.Count);
             _ = ComputeSizesAsync(outcome.Resolution.Applications);

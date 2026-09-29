@@ -13,6 +13,7 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <!-- Header: intro + actions (§15–16) -->
@@ -186,8 +187,72 @@
       </ListView>
     </Grid>
 
+    <!-- Runtime items no application claimed (§7.5–7.8), collapsed when empty -->
+    <Expander Grid.Row="3" Margin="0,8,0,0" IsExpanded="True"
+              Visibility="{Binding Unattributed.Count, Converter={StaticResource EmptyToCollapsed}}">
+      <Expander.Header>
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="{StaticResource Scan.Unattributed}" Style="{StaticResource Text.Section}" />
+          <TextBlock Text="{Binding Unattributed.Count, StringFormat=' ({0})'}" Style="{StaticResource Text.Section}" />
+        </StackPanel>
+      </Expander.Header>
+      <StackPanel>
+        <TextBlock Text="{StaticResource Scan.UnattributedHint}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,4,0,6" />
+        <ListView ItemsSource="{Binding Unattributed}" MaxHeight="200" BorderThickness="0" Background="Transparent">
+          <ListView.View>
+            <GridView>
+              <GridViewColumn Header="{StaticResource Column.Kind}" Width="100">
+                <GridViewColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding KindText}" Style="{StaticResource Text.Cell}" />
+                  </DataTemplate>
+                </GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{StaticResource Column.ItemName}" Width="200">
+                <GridViewColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Cell}" TextTrimming="CharacterEllipsis" />
+                  </DataTemplate>
+                </GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{StaticResource Column.Path}" Width="360">
+                <GridViewColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding ExecutablePath}" Style="{StaticResource Text.CellSecondary}" TextTrimming="CharacterEllipsis" />
+                  </DataTemplate>
+                </GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{StaticResource Column.Detail}" Width="160">
+                <GridViewColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding Detail}" Style="{StaticResource Text.CellSecondary}" TextTrimming="CharacterEllipsis" />
+                  </DataTemplate>
+                </GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Header="{StaticResource Column.Reason}" Width="200">
+                <GridViewColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding ReasonText}" Style="{StaticResource Text.CellSecondary}" TextTrimming="CharacterEllipsis" />
+                  </DataTemplate>
+                </GridViewColumn.CellTemplate>
+              </GridViewColumn>
+              <GridViewColumn Width="140">
+                <GridViewColumn.CellTemplate>
+                  <DataTemplate>
+                    <Button Style="{StaticResource Link.Button}" Content="{StaticResource Scan.AnalyzeItemFolder}"
+                            Command="{Binding DataContext.AnalyzeUnattributedCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                            CommandParameter="{Binding}" />
+                  </DataTemplate>
+                </GridViewColumn.CellTemplate>
+              </GridViewColumn>
+            </GridView>
+          </ListView.View>
+        </ListView>
+      </StackPanel>
+    </Expander>
+
     <!-- §34 errors, collapsed when empty -->
-    <Expander Grid.Row="3" Margin="0,8,0,0" IsExpanded="False"
+    <Expander Grid.Row="4" Margin="0,8,0,0" IsExpanded="False"
               Visibility="{Binding Errors.Count, Converter={StaticResource EmptyToCollapsed}}">
       <Expander.Header>
         <StackPanel Orientation="Horizontal">
@@ -199,7 +264,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate>
             <TextBlock Style="{StaticResource Text.Mono}">
-              <Run Text="{Binding Source, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" — " /><Run Text="{Binding Message, Mode=OneWay}" />
+              <Run Text="{Binding Source, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding Target, Mode=OneWay}" /><Run Text=" — " /><Run Text="{Binding Text, Mode=OneWay}" />
             </TextBlock>
           </DataTemplate>
         </ListBox.ItemTemplate>

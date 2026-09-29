@@ -35,7 +35,19 @@ public interface IScanner<T>
 }
 
 /// <summary>An error encountered while scanning one item; the scan itself continues.</summary>
-public sealed record ScanError(string Source, string Target, string Message, Exception? Exception = null);
+/// <summary>
+/// One failure met while scanning (§34). <paramref name="Message"/> is the concrete cause in English (usually the OS
+/// message); when <paramref name="Code"/> is set the UI localises the error from the code and <paramref name="Detail"/>.
+/// </summary>
+public sealed record ScanError(string Source, string Target, string Message, Exception? Exception = null, string? Code = null, string? Detail = null);
+
+/// <summary>Well-known <see cref="ScanError.Code"/> values.</summary>
+public static class ScanErrorCodes
+{
+    public const string CustomDirectoryMissing = "CustomDirectoryMissing";
+    public const string CustomDirectoryProtected = "CustomDirectoryProtected";
+    public const string CustomDirectoryLooksLikeProgram = "CustomDirectoryLooksLikeProgram";
+}
 
 /// <summary>Items found plus the errors met on the way.</summary>
 public sealed record ScanResult<T>(IReadOnlyList<T> Items, IReadOnlyList<ScanError> Errors)

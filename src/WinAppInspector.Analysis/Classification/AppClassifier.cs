@@ -160,6 +160,14 @@ public sealed class AppClassifier
 
         if (!draft.Directories.Any(d => d.ContainsExecutables))
         {
+            if (primary.Root == ScanRoot.Custom)
+            {
+                // The stale / cache-only residue heuristics (§9.5) assume an OS-defined application container. In a folder the
+                // user added, an executable-free sub-folder is just as likely to be their data, so it stays 待判断 (§9.10).
+                reasons.Add(new Reason(ReasonKind.MainExecutableMissing, primary.Path));
+                return AppType.Undetermined;
+            }
+
             var verdict = _residue.Evaluate(draft, now);
             reasons.AddRange(verdict.Reasons.Where(r => r.Kind != ReasonKind.UninstallEntryMissing));
             return verdict.Type;
