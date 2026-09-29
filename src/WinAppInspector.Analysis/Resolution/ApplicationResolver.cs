@@ -383,7 +383,7 @@ public sealed class ApplicationResolver : IApplicationResolver
             {
                 owner.ScheduledTasks.Add(task);
                 owner.Sources |= DiscoverySource.ScheduledTask;
-                owner.AddEvidence(EvidenceKind.ScheduledTaskPointsToDirectory, $"{task.TaskPath.TrimEnd('\\')}\\{task.TaskName} -> {directory}");
+                owner.AddEvidence(EvidenceKind.ScheduledTaskPointsToDirectory, $"{task.FullPath} -> {directory}");
             }
             else if (task.Execute is not null && !IsSystemPath(snapshot.Folders, task.Execute))
             {

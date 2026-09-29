@@ -68,7 +68,8 @@ public sealed class CleanupPlanner
             candidates.Add(new CleanupCandidate
             {
                 Kind = isFolder ? CleanupItemKind.StartupFolderItem : CleanupItemKind.StartupRegistryValue,
-                Target = isFolder ? item.Command ?? item.Name : $"{item.Location}::{item.Name}",
+                // A Startup-folder entry is removed by deleting the shortcut itself, never the program it points to.
+                Target = isFolder ? item.FilePath ?? WindowsPath.Combine(item.Location, item.Name + ".lnk") : $"{item.Location}::{item.Name}",
                 Detail = item.Command,
                 CanRecycle = isFolder,
                 RequiresElevation = item.IsMachineWide,
@@ -77,7 +78,7 @@ public sealed class CleanupPlanner
 
         foreach (var task in report.ScheduledTasks)
         {
-            var path = task.TaskPath.EndsWith('\\') ? task.TaskPath + task.TaskName : task.TaskPath + "\\" + task.TaskName;
+            var path = task.FullPath;
             if (!candidates.Any(c => c.Kind == CleanupItemKind.ScheduledTask && string.Equals(c.Target, path, StringComparison.OrdinalIgnoreCase)))
             {
                 candidates.Add(new CleanupCandidate

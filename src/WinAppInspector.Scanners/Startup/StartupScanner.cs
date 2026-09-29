@@ -153,6 +153,7 @@ public sealed class StartupScanner : IScanner<StartupItemRecord>
                     Command = command,
                     ExecutablePath = target,
                     IsDisabled = approved is not null && approved.TryGetValue(fileName, out var disabled) ? disabled : null,
+                    FilePath = WindowsPath.Normalize(file),
                 });
             }
         }
@@ -162,7 +163,7 @@ public sealed class StartupScanner : IScanner<StartupItemRecord>
         }
     }
 
-    /// <summary>StartupApproved values are 12-byte blobs; the first byte is 0x02 (enabled) or 0x03 (disabled).</summary>
+    /// <summary>StartupApproved values are 12-byte blobs; bit 0 of the first byte set (0x03, 0x07) means disabled, clear (0x02, 0x06) means enabled.</summary>
     private Dictionary<string, bool>? ReadApprovedStates(RegistryHive hive, string path, List<ScanError> errors)
     {
         try
@@ -179,7 +180,7 @@ public sealed class StartupScanner : IScanner<StartupItemRecord>
             {
                 if (key.GetValue(valueName) is byte[] { Length: > 0 } blob)
                 {
-                    result[valueName] = blob[0] is 0x03 or 0x01;
+                    result[valueName] = (blob[0] & 0x01) != 0;
                 }
             }
 

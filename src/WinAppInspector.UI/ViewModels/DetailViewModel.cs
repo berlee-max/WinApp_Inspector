@@ -21,6 +21,7 @@ public sealed partial class DetailViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(StartupItems))]
     [NotifyPropertyChangedFor(nameof(Services))]
     [NotifyPropertyChangedFor(nameof(ScheduledTasks))]
+    [NotifyPropertyChangedFor(nameof(HasLinks))]
     [NotifyPropertyChangedFor(nameof(Reasons))]
     [NotifyPropertyChangedFor(nameof(Evidence))]
     [NotifyPropertyChangedFor(nameof(VerdictText))]
@@ -56,6 +57,7 @@ public sealed partial class DetailViewModel : ObservableObject
     public IReadOnlyList<StartupItemRecord> StartupItems => Entity?.StartupItems ?? [];
     public IReadOnlyList<ServiceRecord> Services => Entity?.Services ?? [];
     public IReadOnlyList<ScheduledTaskRecord> ScheduledTasks => Entity?.ScheduledTasks ?? [];
+    public bool HasLinks => StartupItems.Count > 0 || Services.Count > 0 || ScheduledTasks.Count > 0;
     public IReadOnlyList<Reason> Reasons => Entity?.Reasons ?? [];
     public IReadOnlyList<EvidenceItem> Evidence => Entity?.Evidence ?? [];
 

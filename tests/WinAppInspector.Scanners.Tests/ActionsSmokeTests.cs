@@ -94,6 +94,52 @@ public class ActionsSmokeTests
     }
 
     [WindowsFact]
+    public async Task Cleanup_manager_removes_a_startup_folder_shortcut_but_never_a_file_elsewhere()
+    {
+        var folders = WindowsKnownFolders.FromEnvironment();
+        var guard = new DeletionGuard(new ProtectedPathRule(folders));
+        var logDir = Directory.CreateTempSubdirectory("wai-startup-log-").FullName;
+        var root = Directory.CreateTempSubdirectory("wai-startup-").FullName;
+        var startup = Path.Combine(root, "Start Menu", "Programs", "Startup");
+        Directory.CreateDirectory(startup);
+        var shortcut = Path.Combine(startup, "Foo.lnk");
+        await File.WriteAllTextAsync(shortcut, "not a real shortcut");
+        var elsewhere = Path.Combine(root, "Foo.exe");
+        await File.WriteAllTextAsync(elsewhere, "program");
+
+        try
+        {
+            using var log = new FileOperationLog(logDir, NullLogger<FileOperationLog>.Instance);
+            var manager = new CleanupManager(new ProtectedPathRule(folders), guard, log, NullLogger<CleanupManager>.Instance);
+            var app = new ApplicationEntity { Id = "s", Name = "Startup", AppType = AppType.SuspectedResidue, DetectionConfidence = ConfidenceLevel.High };
+            var plan = new CleanupPlan
+            {
+                Application = app,
+                UserConfirmed = true,
+                UseRecycleBin = false,
+                PermanentDeletionAcknowledged = true,
+                Items =
+                [
+                    new CleanupCandidate { Kind = CleanupItemKind.StartupFolderItem, Target = shortcut, CanRecycle = true },
+                    new CleanupCandidate { Kind = CleanupItemKind.StartupFolderItem, Target = elsewhere, CanRecycle = true },
+                ],
+            };
+
+            var result = await manager.ExecuteAsync(plan, null, CancellationToken.None);
+
+            result.Items[0].Succeeded.Should().BeTrue(result.Items[0].Error);
+            File.Exists(shortcut).Should().BeFalse();
+            result.Items[1].Succeeded.Should().BeFalse("only entries inside a Startup folder may be removed this way");
+            File.Exists(elsewhere).Should().BeTrue();
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+            Directory.Delete(logDir, recursive: true);
+        }
+    }
+
+    [WindowsFact]
     public async Task Uninstall_manager_refuses_unconfirmed_requests_and_reports_missing_uninstaller()
     {
         var logDir = Directory.CreateTempSubdirectory("wai-uninstall-log-").FullName;
