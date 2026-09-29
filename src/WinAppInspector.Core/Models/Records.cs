@@ -51,6 +51,8 @@ public sealed record StartupItemRecord
     public bool IsMachineWide { get; init; }
     public string? Command { get; init; }
     public string? ExecutablePath { get; init; }
+    /// <summary>From Explorer's StartupApproved state; <c>null</c> when unknown.</summary>
+    public bool? IsDisabled { get; init; }
 }
 
 /// <summary>A scheduled task (§7.8).</summary>
@@ -104,7 +106,8 @@ public sealed record AppxPackageRecord
     public string? InstallLocation { get; init; }
     public string? Architecture { get; init; }
     public bool IsFramework { get; init; }
-    public bool NonRemovable { get; init; }
+    /// <summary>Only known when read through PowerShell; the WinRT API does not expose it.</summary>
+    public bool? NonRemovable { get; init; }
     public bool IsBundle { get; init; }
     public string? SignatureKind { get; init; }
 }
@@ -131,7 +134,7 @@ public sealed record SignatureInfo
     public required SignatureStatus Status { get; init; }
     public string? SubjectName { get; init; }
     public string? IssuerName { get; init; }
-    /// <summary>Publisher name extracted from the certificate subject (CN / O).</summary>
+    /// <summary>Publisher name extracted from the certificate subject: the O attribute when present, otherwise the CN.</summary>
     public string? Publisher { get; init; }
     public string? Thumbprint { get; init; }
     public DateTimeOffset? SigningTime { get; init; }

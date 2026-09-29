@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAppInspector.Core.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAppInspector.Analysis.Tests", "tests\WinAppInspector.Analysis.Tests\WinAppInspector.Analysis.Tests.csproj", "{2FB04A81-1B2F-4964-A094-45DE9B573E70}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAppInspector.Scanners.Tests", "tests\WinAppInspector.Scanners.Tests\WinAppInspector.Scanners.Tests.csproj", "{62586C71-C80A-4A0C-9FD8-EB1D5FCD529A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{2FB04A81-1B2F-4964-A094-45DE9B573E70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FB04A81-1B2F-4964-A094-45DE9B573E70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FB04A81-1B2F-4964-A094-45DE9B573E70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62586C71-C80A-4A0C-9FD8-EB1D5FCD529A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62586C71-C80A-4A0C-9FD8-EB1D5FCD529A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62586C71-C80A-4A0C-9FD8-EB1D5FCD529A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62586C71-C80A-4A0C-9FD8-EB1D5FCD529A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A142C17C-F733-4062-8CF9-4457E5411461} = {329F4899-6E2D-440C-B432-CF11E2776886}
@@ -67,5 +73,6 @@ Global
 		{5F9D61D4-23EC-4A1D-91D1-33E3C3455F10} = {329F4899-6E2D-440C-B432-CF11E2776886}
 		{508A6BAC-841C-4AC0-9D99-FC90D20E4ACD} = {F8319A17-5477-4B7E-B138-70E81377225C}
 		{2FB04A81-1B2F-4964-A094-45DE9B573E70} = {F8319A17-5477-4B7E-B138-70E81377225C}
+		{62586C71-C80A-4A0C-9FD8-EB1D5FCD529A} = {F8319A17-5477-4B7E-B138-70E81377225C}
 	EndGlobalSection
 EndGlobal

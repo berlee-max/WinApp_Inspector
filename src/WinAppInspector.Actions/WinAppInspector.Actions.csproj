@@ -2,7 +2,8 @@
 
   <!-- Actions: uninstall, cleanup and restore-point operations. Every destructive call goes through Core's DeletionGuard first. -->
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <RootNamespace>WinAppInspector.Actions</RootNamespace>
   </PropertyGroup>
 
