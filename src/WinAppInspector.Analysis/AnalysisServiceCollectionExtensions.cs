@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using WinAppInspector.Analysis.Classification;
+using WinAppInspector.Analysis.Cleanup;
 using WinAppInspector.Analysis.Matching;
 using WinAppInspector.Analysis.Resolution;
 
@@ -20,6 +21,7 @@ public static class AnalysisServiceCollectionExtensions
         services.AddSingleton<AppClassifier>();
         services.AddSingleton<RiskAssessor>();
         services.AddSingleton<IApplicationResolver, ApplicationResolver>();
+        services.AddSingleton<CleanupPlanner>();
         return services;
     }
 }

@@ -69,6 +69,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Overview.ShowSystemComponents = !settings.Current.HideSystemComponents;
         Scan.ScanRequested += (_, _) => RescanCommand.Execute(null);
         Scan.AnalyzeFolderRequested += (_, path) => _ = AnalyzeFolderAsync(path);
+        Uninstall.RescanRequested += (_, _) =>
+        {
+            if (RescanCommand.CanExecute(null))
+            {
+                RescanCommand.Execute(null);
+            }
+        };
         StatusText = Localize.Get("Status.Idle");
     }
 
